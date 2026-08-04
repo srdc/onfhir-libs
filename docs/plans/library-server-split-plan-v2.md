@@ -1,6 +1,6 @@
 # Library / Server Split Implementation Plan - Version 2
 
-> Status: accepted 2026-07-31; Phase 4 complete; contributor/IP approval recorded; ready for Phase 5A
+> Status: Phase 5A in progress; physical split and unsigned staging verified; signed staging awaits a usable SRDC GPG key
 >
 > Supersedes for future implementation:
 > `docs/plans/library-server-split-plan.md`
@@ -1065,6 +1065,35 @@ push a repository or publish artifacts without separate authorization.
 library staging contains correct licenses, sources, Javadocs/ScalaDocs, POMs,
 and signatures; Repofyr server-r4 tests pass against staged artifacts.
 
+#### Phase 5A implementation record - in progress 2026-08-04
+
+- Created a dedicated clone under `C:\tmp`, ran `git filter-repo` only there,
+  and placed the filtered history at the approved sibling path
+  `C:\srdc\codes\onfhir-io\onfhir-libs`. The original Repofyr `.git`
+  directory was not filtered or replaced.
+- Created the `io.onfhir:onfhir-libs-parent:4.0.0` reactor with all nine
+  reusable modules and the optional `io.onfhir:onfhir-libs-bom:4.0.0`.
+  Existing library artifact IDs and `io.onfhir.*` packages remain unchanged.
+- Applied Apache-2.0 repository and POM metadata, added `NOTICE`, and packaged
+  `META-INF/LICENSE` plus `META-INF/NOTICE` in every binary library JAR.
+- The standalone library reactor ran 98 tests with zero failures or errors.
+  The source/resource boundary and transitive Enforcer gates passed, and all
+  33 external dependencies passed the approved license gate.
+- An unsigned file-based staging rehearsal verified all 11 coordinates,
+  flattened POMs, binary JARs, source JARs, Scaladoc/Javadoc JARs, and packaged
+  license files. No artifact was published externally.
+- Removed all nine library source modules from the Repofyr reactor, pinned
+  `onfhir.libs.version` to `4.0.0`, and retained the GPL-3.0
+  `io.onfhir:fhir-repository_2.13` server parent.
+- With a fresh Maven cache resolving libraries only from the file-based
+  staging repository, the source-free Repofyr reactor validated and all 146
+  server-r4 tests passed with zero failures or errors.
+- Signed staging remains pending. Maven's configured key `789EC152` is not
+  present, and the only discovered local secret key is unusable for signing.
+  A usable SRDC release key is required; no replacement key was generated.
+- Neither repository has been pushed, published, or committed for Phase 5A.
+  Fresh-checkout verification follows the approved commits.
+
 ### Phase 5B - Repofyr Maven And Package Namespace Migration
 
 Start this only after Phase 5A is green. The reusable libraries retain the
@@ -1263,7 +1292,7 @@ The split is complete only when all of the following are true:
 
 ## 10. Next Action
 
-Phase 3.6 is complete. In the next dedicated working session, begin only Phase
-4: add release-hygiene automation and rehearse the library-only build and
-repository extraction without changing the monorepo's GPL license or filtering
-the original working copy.
+Finish Phase 5A by configuring a usable SRDC release-signing key, producing
+and verifying signed `4.0.0` staging artifacts, committing both repositories
+when authorized, and repeating the independent builds from fresh checkouts.
+Do not begin Phase 5B until those Phase 5A exit gates are green.

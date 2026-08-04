@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>io.onfhir</groupId>
-        <artifactId>fhir-repository_2.13</artifactId>
+        <artifactId>onfhir-libs-parent</artifactId>
         <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -38,10 +38,12 @@
         <dependency>
             <groupId>io.onfhir</groupId>
             <artifactId>onfhir-path_${scala.binary.version}</artifactId>
+            <version>${onfhir.libs.version}</version>
         </dependency>
         <dependency>
             <groupId>io.onfhir</groupId>
             <artifactId>onfhir-common_${scala.binary.version}</artifactId>
+            <version>${onfhir.libs.version}</version>
         </dependency>
         <!-- Unit Testing -->
         <dependency>
@@ -54,10 +56,5 @@
             <artifactId>specs2-junit_${scala.binary.version}</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!--dependency>
-            <groupId>io.onfhir</groupId>
-            <artifactId>onfhir-server-r4</artifactId>
-            <scope>test</scope>
-        </dependency-->
     </dependencies>
 </project>

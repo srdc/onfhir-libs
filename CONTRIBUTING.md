@@ -1,8 +1,8 @@
 # Contributing
 
-Thank you for contributing to onFHIR and Repofyr. Before opening a change,
-read `AGENTS.md` and the active plan under `docs/plans` when working on the
-library/server split.
+Thank you for contributing to the onFHIR reusable libraries. Read `AGENTS.md`
+and the active migration records under `docs/plans` before changing a public
+contract.
 
 ## Development certificate of origin
 
@@ -15,9 +15,9 @@ git commit -s
 ```
 
 By signing off, you certify that you wrote the contribution or otherwise have
-the right to submit it under the project's applicable license. Sign-offs are
-not a substitute for the explicit historical contributor/IP approval required
-before relicensing the extracted library repository.
+the right to submit it under the project's applicable license. The historical
+contributor/IP approval for Apache-2.0 relicensing is recorded in
+`docs/release/library-relicensing-audit.md`.
 
 ## Before submitting
 
@@ -25,6 +25,6 @@ before relicensing the extracted library repository.
   concerns.
 - Record library module relocations and public API changes in the migration
   table in `docs/plans/library-server-split-plan-v2.md`.
-- Run the relevant module tests and the `onfhir-server-r4` regression suite.
+- Run the relevant module tests and the full library reactor.
 - Run `powershell -File scripts/check-forbidden-imports.ps1`.
-- Do not change license files as part of ordinary code changes.
+- Ensure release JARs retain `META-INF/LICENSE` and `META-INF/NOTICE`.

@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>fhir-repository_2.13</artifactId>
+        <artifactId>onfhir-libs-parent</artifactId>
         <groupId>io.onfhir</groupId>
         <version>${revision}</version>
     </parent>
@@ -35,10 +35,12 @@
         <dependency>
             <groupId>io.onfhir</groupId>
             <artifactId>onfhir-common_${scala.binary.version}</artifactId>
+            <version>${onfhir.libs.version}</version>
         </dependency>
         <dependency>
             <groupId>io.onfhir</groupId>
             <artifactId>onfhir-validation_${scala.binary.version}</artifactId>
+            <version>${onfhir.libs.version}</version>
         </dependency>
     </dependencies>
 </project>

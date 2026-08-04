@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>fhir-repository_2.13</artifactId>
+        <artifactId>onfhir-libs-parent</artifactId>
         <groupId>io.onfhir</groupId>
         <version>${revision}</version>
     </parent>
@@ -35,10 +35,12 @@
         <dependency>
             <groupId>io.onfhir</groupId>
             <artifactId>onfhir-common_${scala.binary.version}</artifactId>
+            <version>${onfhir.libs.version}</version>
         </dependency>
         <dependency>
             <groupId>io.onfhir</groupId>
             <artifactId>onfhir-path_${scala.binary.version}</artifactId>
+            <version>${onfhir.libs.version}</version>
         </dependency>
 
         <!-- JSON Utilities -->

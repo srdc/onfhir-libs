@@ -2,15 +2,12 @@ name: Maven verification
 
 on:
   push:
-    branches: [master, updating-operation-handling, repository-split]
+    branches: [main]
   pull_request:
-    branches: [master, updating-operation-handling, repository-split]
-
-env:
-  LIBRARY_MODULES: onfhir-common,onfhir-client,onfhir-path,onfhir-query,onfhir-config,onfhir-expression,onfhir-validation,onfhir-template-engine,onfhir-r4
+    branches: [main]
 
 jobs:
-  library-boundaries:
+  boundaries:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,11 +17,11 @@ jobs:
           java-version: '17'
           distribution: temurin
           cache: maven
-      - name: Gates A and B - source and resources
+      - name: Source and resource boundary
         shell: pwsh
         run: ./scripts/check-forbidden-imports.ps1
-      - name: Gate C - resolved dependency graph
-        run: mvn -B -pl "$LIBRARY_MODULES" -am validate -DskipTests
+      - name: Resolved dependency boundary
+        run: mvn -B validate -DskipTests
       - name: Dependency license allow-list
         shell: pwsh
         run: ./scripts/check-library-dependency-licenses.ps1
@@ -45,7 +42,7 @@ jobs:
         shell: pwsh
         run: ./scripts/check-binary-compatibility.ps1
 
-  split-rehearsal:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -55,19 +52,7 @@ jobs:
           java-version: '17'
           distribution: temurin
           cache: maven
-      - name: Build library-only then server-only reactors
-        shell: pwsh
-        run: ./scripts/rehearse-library-server-split.ps1
-
-  full-build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: temurin
-          cache: maven
-      - name: Full reactor tests
+      - name: Full library reactor
         run: mvn -B test
+      - name: Release attachments without signing
+        run: mvn -B -Prelease -Dgpg.skip=true package

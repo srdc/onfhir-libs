@@ -1,131 +1,96 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.onfhir</groupId>
-    <artifactId>fhir-repository_2.13</artifactId>
+    <artifactId>onfhir-libs-parent</artifactId>
     <version>${revision}</version>
-
     <packaging>pom</packaging>
 
-    <name>onFHIR Secure FHIR Repository</name>
-    <description>onFHIR is an HL7 FHIR compliant secure, high-performance and scalable health data repository that can
-        be used as the central data service for HL7 FHIR compliant healthcare applications.
-    </description>
-    <url>https://onfhir.io</url>
+    <name>onFHIR Reusable Libraries</name>
+    <description>Reusable, transport-neutral libraries for working with HL7 FHIR.</description>
+    <url>https://github.com/srdc/onfhir-libs</url>
+    <inceptionYear>2019</inceptionYear>
 
     <licenses>
         <license>
-            <name>GNU General Public License v3.0</name>
-            <url>https://www.gnu.org/licenses/gpl-3.0.en.html</url>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
         </license>
     </licenses>
 
     <developers>
         <developer>
             <id>tnamli</id>
-            <name>Tuncay Namlı</name>
+            <name>Tuncay Namli</name>
             <email>tuncay@srdc.com.tr</email>
             <organization>SRDC Corp.</organization>
             <organizationUrl>https://www.srdc.com.tr</organizationUrl>
         </developer>
         <developer>
             <id>msfyuksel</id>
-            <name>Mustafa Yüksel</name>
+            <name>Mustafa Yuksel</name>
             <email>mustafa@srdc.com.tr</email>
             <organization>SRDC Corp.</organization>
             <organizationUrl>https://www.srdc.com.tr</organizationUrl>
         </developer>
         <developer>
             <id>sinaci</id>
-            <name>Ali Anıl Sınacı</name>
+            <name>Ali Anil Sinaci</name>
             <email>anil@srdc.com.tr</email>
             <organization>SRDC Corp.</organization>
             <organizationUrl>https://www.srdc.com.tr</organizationUrl>
         </developer>
         <developer>
             <id>postaci</id>
-            <name>Şenan Postacı</name>
+            <name>Senan Postaci</name>
             <email>senan@srdc.com.tr</email>
             <organization>SRDC Corp.</organization>
             <organizationUrl>https://www.srdc.com.tr</organizationUrl>
         </developer>
-        <developer>
-            <id>dogukan10</id>
-            <name>Dogukan Cavdaroglu</name>
-            <email>dogukan@srdc.com.tr</email>
-            <organization>SRDC Corp.</organization>
-            <organizationUrl>https://www.srdc.com.tr</organizationUrl>
-        </developer>
-        <developer>
-            <id>ozankose1992</id>
-            <name>Ozan Köse</name>
-            <email>ozankose1992@gmail.com</email>
-        </developer>
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/srdc/onfhir.git</connection>
-        <developerConnection>scm:git:ssh://github.com:srdc/onfhir.git</developerConnection>
-        <url>https://github.com/srdc/onfhir/tree/master</url>
+        <connection>scm:git:https://github.com/srdc/onfhir-libs.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/srdc/onfhir-libs.git</developerConnection>
+        <url>https://github.com/srdc/onfhir-libs</url>
+        <tag>HEAD</tag>
     </scm>
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/srdc/onfhir-libs/issues</url>
+    </issueManagement>
 
     <modules>
         <module>onfhir-common</module>
-        <module>onfhir-event</module>
-        <module>onfhir-core</module>
-        <module>onfhir-operations</module>
-        <module>onfhir-kafka</module>
-        <module>onfhir-server-r4</module>
-        <module>onfhir-server-stu3</module>
-        <module>onfhir-path</module>
-        <module>onfhir-validation</module>
-        <module>onfhir-config</module>
-        <module>onfhir-server-r5</module>
         <module>onfhir-client</module>
-        <module>onfhir-expression</module>
-        <module>onfhir-r4</module>
-        <module>onfhir-template-engine</module>
+        <module>onfhir-path</module>
         <module>onfhir-query</module>
+        <module>onfhir-config</module>
+        <module>onfhir-expression</module>
+        <module>onfhir-validation</module>
+        <module>onfhir-template-engine</module>
+        <module>onfhir-r4</module>
+        <module>onfhir-libs-bom</module>
     </modules>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
-
-        <!-- This is a special placeholder to manage the version from a single property throughout the parent and child modules. No other property name can be used. -->
-        <!-- https://maven.apache.org/maven-ci-friendly.html -->
-        <revision>3.4.1-SNAPSHOT</revision>
-        <!-- Kept distinct now so the server reactor can consume independently
-             versioned library artifacts after the physical split. -->
+        <revision>4.0.0</revision>
         <onfhir.libs.version>${revision}</onfhir.libs.version>
-        <library.gates.skip>true</library.gates.skip>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.release>11</maven.compiler.release>
+        <library.gates.skip>false</library.gates.skip>
 
-        <!-- plugin versions -->
-        <scala.maven.plugin.version>4.8.1</scala.maven.plugin.version>
-        <jar.plugin.version>3.3.0</jar.plugin.version>
-        <maven-shade-plugin.version>3.5.1</maven-shade-plugin.version>
-        <surefire.plugin.version>3.2.5</surefire.plugin.version>
-        <maven-compiler.plugin.version>3.12.1</maven-compiler.plugin.version>
-        <flatten.plugin.version>1.6.0</flatten.plugin.version>
-        <maven.enforcer.plugin.version>3.6.3</maven.enforcer.plugin.version>
-
-        <!-- dependency versions -->
         <scala.version>2.13.16</scala.version>
         <scala.binary.version>2.13</scala.binary.version>
         <scala.pcombinators>2.4.0</scala.pcombinators>
-        <akka-http.version>10.5.3</akka-http.version>
-        <akka.version>2.8.5</akka.version>
-        <!--mongodb.scala.version>4.11.1</mongodb.scala.version-->
-        <mongodb.scala.version>5.1.3</mongodb.scala.version>
-        <mongo.embedded.version>4.18.1</mongo.embedded.version>
         <json4s.version>3.7.0-M11</json4s.version>
         <scala.xml.version>2.2.0</scala.xml.version>
         <logback.version>1.4.14</logback.version>
-        <kafka.version>3.6.1</kafka.version>
         <config.version>1.4.3</config.version>
         <specs2.version>4.20.4</specs2.version>
         <nimbus-jose.version>9.37.3</nimbus-jose.version>
@@ -135,18 +100,21 @@
         <apache-commons-text.version>1.13.0</apache-commons-text.version>
         <reflections.version>0.10.2</reflections.version>
 
-        <!-- release plugin versions -->
-        <version.plugin.source>3.2.1</version.plugin.source>
-        <version.plugin.gpg>3.2.8</version.plugin.gpg>
-        <version.plugin.sonatype.publishing>0.8.0</version.plugin.sonatype.publishing>
+        <scala.maven.plugin.version>4.8.1</scala.maven.plugin.version>
+        <jar.plugin.version>3.3.0</jar.plugin.version>
+        <surefire.plugin.version>3.2.5</surefire.plugin.version>
+        <compiler.plugin.version>3.12.1</compiler.plugin.version>
+        <resources.plugin.version>3.3.1</resources.plugin.version>
+        <source.plugin.version>3.2.1</source.plugin.version>
+        <gpg.plugin.version>3.2.8</gpg.plugin.version>
+        <enforcer.plugin.version>3.6.3</enforcer.plugin.version>
+        <flatten.plugin.version>1.6.0</flatten.plugin.version>
+        <central.publishing.plugin.version>0.8.0</central.publishing.plugin.version>
     </properties>
 
     <build>
-        <!--sourceDirectory>src/main/scala</sourceDirectory-->
-        <!--testSourceDirectory>src/test/scala</testSourceDirectory-->
         <pluginManagement>
             <plugins>
-                <!-- Allows compiling/testing/running/documenting Scala code in Maven. -->
                 <plugin>
                     <groupId>net.alchim31.maven</groupId>
                     <artifactId>scala-maven-plugin</artifactId>
@@ -184,11 +152,6 @@
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-shade-plugin</artifactId>
-                    <version>${maven-shade-plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${surefire.plugin.version}</version>
                     <configuration>
@@ -206,22 +169,22 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>${maven-compiler.plugin.version}</version>
+                    <version>${compiler.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>${resources.plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>
-                    <version>${version.plugin.source}</version>
+                    <version>${source.plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-gpg-plugin</artifactId>
-                    <version>${version.plugin.gpg}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.sonatype.central</groupId>
-                    <artifactId>central-publishing-maven-plugin</artifactId>
-                    <version>${version.plugin.sonatype.publishing}</version>
+                    <version>${gpg.plugin.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -230,14 +193,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>${maven.enforcer.plugin.version}</version>
+                <version>${enforcer.plugin.version}</version>
                 <executions>
                     <execution>
-                        <id>ban-actor-frameworks-from-library-modules</id>
+                        <id>ban-actor-frameworks</id>
                         <phase>validate</phase>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
+                        <goals><goal>enforce</goal></goals>
                         <configuration>
                             <skip>${library.gates.skip}</skip>
                             <rules>
@@ -247,9 +208,33 @@
                                         <exclude>com.typesafe.akka:*</exclude>
                                         <exclude>org.apache.pekko:*</exclude>
                                     </excludes>
-                                    <message>Library modules must not resolve Akka or Pekko dependencies.</message>
+                                    <message>onFHIR reusable libraries must not resolve Akka or Pekko dependencies.</message>
                                 </bannedDependencies>
                             </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>package-license-files</id>
+                        <phase>process-resources</phase>
+                        <goals><goal>copy-resources</goal></goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/META-INF</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${maven.multiModuleProjectDirectory}</directory>
+                                    <filtering>false</filtering>
+                                    <includes>
+                                        <include>LICENSE</include>
+                                        <include>NOTICE</include>
+                                    </includes>
+                                </resource>
+                            </resources>
                         </configuration>
                     </execution>
                 </executions>
@@ -259,28 +244,21 @@
                 <artifactId>flatten-maven-plugin</artifactId>
                 <version>${flatten.plugin.version}</version>
                 <configuration>
-                    <!-- So that the child modules keep all metadata coming from parent pom.
-                    Sonatype maven central requires it. -->
                     <flattenMode>oss</flattenMode>
                 </configuration>
                 <executions>
                     <execution>
                         <id>flatten</id>
                         <phase>process-resources</phase>
-                        <goals>
-                            <goal>flatten</goal>
-                        </goals>
+                        <goals><goal>flatten</goal></goals>
                     </execution>
                     <execution>
                         <id>flatten.clean</id>
-                        <goals>
-                            <goal>clean</goal>
-                        </goals>
+                        <goals><goal>clean</goal></goals>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
-
     </build>
 
     <profiles>
@@ -293,11 +271,9 @@
                         <artifactId>maven-source-plugin</artifactId>
                         <executions>
                             <execution>
-                                <id>attach-source</id>
-                                <phase>compile</phase>
-                                <goals>
-                                    <goal>jar-no-fork</goal>
-                                </goals>
+                                <id>attach-sources</id>
+                                <phase>package</phase>
+                                <goals><goal>jar-no-fork</goal></goals>
                             </execution>
                         </executions>
                     </plugin>
@@ -306,10 +282,9 @@
                         <artifactId>scala-maven-plugin</artifactId>
                         <executions>
                             <execution>
-                                <id>attach-javadocs</id>
-                                <goals>
-                                    <goal>doc-jar</goal>
-                                </goals>
+                                <id>attach-scaladocs</id>
+                                <phase>package</phase>
+                                <goals><goal>doc-jar</goal></goals>
                             </execution>
                         </executions>
                     </plugin>
@@ -320,9 +295,7 @@
                             <execution>
                                 <id>sign-artifacts</id>
                                 <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
+                                <goals><goal>sign</goal></goals>
                                 <configuration>
                                     <gpgArguments>
                                         <arg>--pinentry-mode</arg>
@@ -332,62 +305,31 @@
                             </execution>
                         </executions>
                     </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>central</id>
+            <build>
+                <plugins>
                     <plugin>
                         <groupId>org.sonatype.central</groupId>
                         <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>${central.publishing.plugin.version}</version>
                         <extensions>true</extensions>
                         <configuration>
                             <publishingServerId>central</publishingServerId>
-                            <autoPublish>true</autoPublish>
-                            <waitUntil>published</waitUntil>
+                            <autoPublish>false</autoPublish>
+                            <waitUntil>validated</waitUntil>
                         </configuration>
                     </plugin>
                 </plugins>
             </build>
         </profile>
-        <profile>
-            <id>sources</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-source</id>
-                                <phase>compile</phase>
-                                <goals>
-                                    <goal>jar-no-fork</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>net.alchim31.maven</groupId>
-                        <artifactId>scala-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <goals>
-                                    <goal>doc-jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>xtest</id>
-            <properties>
-                <maven.test.skip>true</maven.test.skip>
-            </properties>
-        </profile>
     </profiles>
 
     <dependencyManagement>
         <dependencies>
-            <!-- Scala Language -->
             <dependency>
                 <groupId>org.scala-lang</groupId>
                 <artifactId>scala-library</artifactId>
@@ -398,185 +340,21 @@
                 <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
                 <version>${scala.pcombinators}</version>
             </dependency>
-
-            <dependency>
-                <groupId>io.onfhir</groupId>
-                <artifactId>onfhir-common_${scala.binary.version}</artifactId>
-                <version>${onfhir.libs.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.onfhir</groupId>
-                <artifactId>onfhir-event_${scala.binary.version}</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.onfhir</groupId>
-                <artifactId>onfhir-config_${scala.binary.version}</artifactId>
-                <version>${onfhir.libs.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.onfhir</groupId>
-                <artifactId>onfhir-core_${scala.binary.version}</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.onfhir</groupId>
-                <artifactId>onfhir-operations_${scala.binary.version}</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.onfhir</groupId>
-                <artifactId>onfhir-kafka_${scala.binary.version}</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.onfhir</groupId>
-                <artifactId>onfhir-r4_${scala.binary.version}</artifactId>
-                <version>${onfhir.libs.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.onfhir</groupId>
-                <artifactId>onfhir-server-r4_${scala.binary.version}</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.onfhir</groupId>
-                <artifactId>onfhir-server-stu3_${scala.binary.version}</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.onfhir</groupId>
-                <artifactId>onfhir-path_${scala.binary.version}</artifactId>
-                <version>${onfhir.libs.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.onfhir</groupId>
-                <artifactId>onfhir-validation_${scala.binary.version}</artifactId>
-                <version>${onfhir.libs.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.onfhir</groupId>
-                <artifactId>onfhir-client_${scala.binary.version}</artifactId>
-                <version>${onfhir.libs.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.onfhir</groupId>
-                <artifactId>onfhir-expression_${scala.binary.version}</artifactId>
-                <version>${onfhir.libs.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.onfhir</groupId>
-                <artifactId>onfhir-query_${scala.binary.version}</artifactId>
-                <version>${onfhir.libs.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.onfhir</groupId>
-                <artifactId>onfhir-template-engine</artifactId>
-                <version>${onfhir.libs.version}</version>
-            </dependency>
-
-            <!-- Akka HTTP Suite -->
-            <dependency>
-                <groupId>com.typesafe.akka</groupId>
-                <artifactId>akka-http-core_${scala.binary.version}</artifactId>
-                <version>${akka-http.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.typesafe.akka</groupId>
-                <artifactId>akka-http_${scala.binary.version}</artifactId>
-                <version>${akka-http.version}</version>
-            </dependency>
-
-            <!-- Caching purposes-->
-            <dependency>
-                <groupId>com.typesafe.akka</groupId>
-                <artifactId>akka-http-caching_${scala.binary.version}</artifactId>
-                <version>${akka-http.version}</version>
-            </dependency>
-            <!-- Testkit for Akka Http-->
-            <dependency>
-                <groupId>com.typesafe.akka</groupId>
-                <artifactId>akka-http-testkit_${scala.binary.version}</artifactId>
-                <version>${akka-http.version}</version>
-                <scope>test</scope>
-            </dependency>
-
-            <!-- Akka and Akka Streaming -->
-            <dependency>
-                <groupId>com.typesafe.akka</groupId>
-                <artifactId>akka-actor_${scala.binary.version}</artifactId>
-                <version>${akka.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.typesafe.akka</groupId>
-                <artifactId>akka-stream_${scala.binary.version}</artifactId>
-                <version>${akka.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.typesafe.akka</groupId>
-                <artifactId>akka-slf4j_${scala.binary.version}</artifactId>
-                <version>${akka.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.typesafe.akka</groupId>
-                <artifactId>akka-testkit_${scala.binary.version}</artifactId>
-                <version>${akka.version}</version>
-            </dependency>
-
-            <!-- MongoDB Driver -->
-            <dependency>
-                <groupId>org.mongodb.scala</groupId>
-                <artifactId>mongo-scala-driver_${scala.binary.version}</artifactId>
-                <version>${mongodb.scala.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.mongodb.scala</groupId>
-                <artifactId>mongo-scala-bson_${scala.binary.version}</artifactId>
-                <version>${mongodb.scala.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.mongodb</groupId>
-                <artifactId>bson</artifactId>
-                <version>${mongodb.scala.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.mongodb</groupId>
-                <artifactId>mongodb-driver-core</artifactId>
-                <version>${mongodb.scala.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.mongodb</groupId>
-                <artifactId>mongodb-driver-reactivestreams</artifactId>
-                <version>${mongodb.scala.version}</version>
-            </dependency>
-
-            <!-- Embedded MongoDB -->
-            <dependency>
-                <groupId>de.flapdoodle.embed</groupId>
-                <artifactId>de.flapdoodle.embed.mongo</artifactId>
-                <version>${mongo.embedded.version}</version>
-            </dependency>
-
-            <!-- JSON Utilities -->
             <dependency>
                 <groupId>org.json4s</groupId>
                 <artifactId>json4s-jackson_${scala.binary.version}</artifactId>
                 <version>${json4s.version}</version>
-            </dependency>
-
-            <!-- XML Utilities -->
-            <dependency>
-                <groupId>org.scala-lang.modules</groupId>
-                <artifactId>scala-xml_${scala.binary.version}</artifactId>
-                <version>${scala.xml.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.json4s</groupId>
                 <artifactId>json4s-xml_${scala.binary.version}</artifactId>
                 <version>${json4s.version}</version>
             </dependency>
-
-            <!-- Commons IO/Text Utilities-->
+            <dependency>
+                <groupId>org.scala-lang.modules</groupId>
+                <artifactId>scala-xml_${scala.binary.version}</artifactId>
+                <version>${scala.xml.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
@@ -592,41 +370,21 @@
                 <artifactId>commons-text</artifactId>
                 <version>${apache-commons-text.version}</version>
             </dependency>
-
-            <!-- Logging -->
             <dependency>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
                 <version>${logback.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-core</artifactId>
                 <version>${logback.version}</version>
             </dependency>
-
-            <!-- Apache Kafka -->
-            <dependency>
-                <groupId>org.apache.kafka</groupId>
-                <artifactId>kafka_${scala.binary.version}</artifactId>
-                <version>${kafka.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-log4j12</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <!-- Application Configuration -->
             <dependency>
                 <groupId>com.typesafe</groupId>
                 <artifactId>config</artifactId>
                 <version>${config.version}</version>
             </dependency>
-
-            <!-- Authorization Configuration and Handling-->
             <dependency>
                 <groupId>com.nimbusds</groupId>
                 <artifactId>nimbus-jose-jwt</artifactId>
@@ -637,41 +395,21 @@
                 <artifactId>oauth2-oidc-sdk</artifactId>
                 <version>${nimbus-oidc.version}</version>
             </dependency>
-
-            <!-- Unit Testing -->
             <dependency>
                 <groupId>org.specs2</groupId>
                 <artifactId>specs2-core_${scala.binary.version}</artifactId>
                 <version>${specs2.version}</version>
-                <scope>provided</scope>
             </dependency>
-
             <dependency>
                 <groupId>org.specs2</groupId>
                 <artifactId>specs2-junit_${scala.binary.version}</artifactId>
                 <version>${specs2.version}</version>
-                <scope>provided</scope>
             </dependency>
-
-            <!-- Reflections -->
             <dependency>
                 <groupId>org.reflections</groupId>
                 <artifactId>reflections</artifactId>
                 <version>${reflections.version}</version>
             </dependency>
         </dependencies>
-
     </dependencyManagement>
-
-    <!--distributionManagement>
-        <snapshotRepository>
-            <id>srdc-maven-snapshots</id>
-            <url>https://nexus.srdc.com.tr/repository/maven-snapshots/</url>
-        </snapshotRepository>
-        <repository>
-            <id>srdc-maven-releases</id>
-            <url>https://nexus.srdc.com.tr/repository/maven-releases/</url>
-        </repository>
-    </distributionManagement-->
-
 </project>

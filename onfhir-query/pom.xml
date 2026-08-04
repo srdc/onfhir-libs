@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>io.onfhir</groupId>
-        <artifactId>fhir-repository_2.13</artifactId>
+        <artifactId>onfhir-libs-parent</artifactId>
         <version>${revision}</version>
     </parent>
     <artifactId>onfhir-query_2.13</artifactId>
