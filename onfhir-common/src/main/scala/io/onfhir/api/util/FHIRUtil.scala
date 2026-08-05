@@ -394,10 +394,11 @@ object FHIRUtil {
       path
         .split('.')
         .foldLeft(resource.asInstanceOf[JValue])((v, i) =>
+          //Navigate with the parsed element name; the raw path item still carries its '[index]' suffixes
           parsePathItem(i) match {
-            case (p, Nil) => (v \ i)
-            case (p, Seq(arrInd)) => (v \ i)(arrInd)
-            case (p, oth) => oth.foldLeft(v \ i)((c, a) => c(a))
+            case (p, Nil) => (v \ p)
+            case (p, Seq(arrInd)) => (v \ p)(arrInd)
+            case (p, oth) => oth.foldLeft(v \ p)((c, a) => c(a))
           }
         )
 
