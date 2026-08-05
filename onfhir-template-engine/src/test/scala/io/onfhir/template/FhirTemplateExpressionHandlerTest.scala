@@ -1,41 +1,47 @@
 package io.onfhir.template
 
+import io.onfhir.api.Resource
+
 import java.time.temporal.Temporal
 import java.time.{Duration, ZonedDateTime}
 import io.onfhir.expression.{FhirExpression, FhirExpressionException}
 import io.onfhir.path.FhirPathEvaluator
 import io.onfhir.util.JsonFormatter._
+import org.json4s.Formats
 import org.json4s.JsonAST.{JArray, JDouble, JNothing, JObject, JString}
-
+import org.junit.runner.RunWith
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.matcher.FutureMatchers
 import org.specs2.mutable.Specification
 import org.specs2.execute.Result
+import org.specs2.runner.JUnitRunner
+
 import scala.concurrent.Future
 import scala.io.Source
 import scala.util.{Failure, Success}
 
+@RunWith(classOf[JUnitRunner])
 class FhirTemplateExpressionHandlerTest(implicit ee: ExecutionEnv) extends Specification with FutureMatchers {
 
   sequential // optional
 
-  implicit val formats = io.onfhir.util.JsonFormatter.formats
+  implicit val formats: Formats = io.onfhir.util.JsonFormatter.formats
 
   // template 1
-  val template1 =
+  val template1: FhirExpression =
     Source.fromInputStream(getClass.getResourceAsStream("/templates/template-expression1.json"))
       .mkString.parseJson.extract[FhirExpression]
 
-  val event1Content =
+  val event1Content: Resource =
     Source.fromInputStream(getClass.getResourceAsStream("/resources/observation-event1.json"))
       .mkString.parseJson
 
-  val context1CareTeam =
+  val context1CareTeam: Resource =
     Source.fromInputStream(getClass.getResourceAsStream("/resources/careteam-context-param1.json"))
       .mkString.parseJson
 
   // Template 2
-  val template2 =
+  val template2: FhirExpression =
     Source.fromInputStream(getClass.getResourceAsStream("/templates/template-expression2.json"))
       .mkString.parseJson.extract[FhirExpression]
 
@@ -45,11 +51,11 @@ class FhirTemplateExpressionHandlerTest(implicit ee: ExecutionEnv) extends Speci
       .mkString.parseJson.extract[FhirExpression]
 
   // Template 4
-  val template4 =
+  val template4: FhirExpression =
     Source.fromInputStream(getClass.getResourceAsStream("/templates/template-expression4.json"))
       .mkString.parseJson.extract[FhirExpression]
 
-  val event4Content =
+  val event4Content: Resource =
     Source.fromInputStream(getClass.getResourceAsStream("/resources/communication-event1.json"))
       .mkString.parseJson
 
