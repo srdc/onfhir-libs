@@ -20,11 +20,22 @@ class CodeBindingValidationTest extends Specification {
   private val valueSetUrl = "http://example.org/ValueSet/test"
   private val unknownValueSetUrl = "http://example.org/ValueSet/unknown"
   private val multiVersionValueSetUrl = "http://example.org/ValueSet/multi-version"
+  private val doubleDigitVersionValueSetUrl = "http://example.org/ValueSet/double-digit-version"
+  private val unversionedValueSetUrl = "http://example.org/ValueSet/unversioned"
   private val valueSets = Map(
     valueSetUrl -> Map("1" -> ValueSetRestrictions(ValueSetDef(Map(systemUrl -> Set("allowed"))))),
     multiVersionValueSetUrl -> Map(
       "1" -> ValueSetRestrictions(ValueSetDef(Map(systemUrl -> Set("in-version-1")))),
       "2" -> ValueSetRestrictions(ValueSetDef(Map(systemUrl -> Set("in-version-2"))))
+    ),
+    doubleDigitVersionValueSetUrl -> Map(
+      "9" -> ValueSetRestrictions(ValueSetDef(Map(systemUrl -> Set("in-version-9")))),
+      "10" -> ValueSetRestrictions(ValueSetDef(Map(systemUrl -> Set("in-version-10"))))
+    ),
+    //'*' is the key the terminology parser uses for a ValueSet without a business version
+    unversionedValueSetUrl -> Map(
+      "2" -> ValueSetRestrictions(ValueSetDef(Map(systemUrl -> Set("in-version-2")))),
+      "*" -> ValueSetRestrictions(ValueSetDef(Map(systemUrl -> Set("in-unversioned"))))
     )
   )
 
@@ -135,16 +146,30 @@ class CodeBindingValidationTest extends Specification {
       restriction.evaluate(JString("other"), directValidator) must haveSize(1)
     }
 
-    "pick a version by its key ordering when a value set has several versions and none is requested" in {
+    "pick the latest version when a value set has several versions and none is requested" in {
       val explicitlyVersioned = CodeBindingRestriction(multiVersionValueSetUrl, Some("2"), "required")
       val unversioned = CodeBindingRestriction(multiVersionValueSetUrl, None, "required")
 
       explicitlyVersioned.evaluate(JString("in-version-2"), directValidator) must beEmpty
       explicitlyVersioned.evaluate(JString("in-version-1"), directValidator) must haveSize(1)
 
-      //Current behaviour: FhirTerminologyValidator.getValueSet sorts the version keys and takes the
-      //first one, so the lowest key wins here rather than the newest version its scaladoc promises
-      unversioned.evaluate(JString("in-version-1"), directValidator) must beEmpty
+      //Without a requested version the newest one is used, as the terminology validator's scaladoc promises
+      unversioned.evaluate(JString("in-version-2"), directValidator) must beEmpty
+      unversioned.evaluate(JString("in-version-1"), directValidator) must haveSize(1)
+    }
+
+    "compare the version keys numerically rather than lexicographically" in {
+      val unversioned = CodeBindingRestriction(doubleDigitVersionValueSetUrl, None, "required")
+
+      //A plain string sort would rank '9' above '10'
+      unversioned.evaluate(JString("in-version-10"), directValidator) must beEmpty
+      unversioned.evaluate(JString("in-version-9"), directValidator) must haveSize(1)
+    }
+
+    "prefer the definition without a business version over the versioned ones" in {
+      val unversioned = CodeBindingRestriction(unversionedValueSetUrl, None, "required")
+
+      unversioned.evaluate(JString("in-unversioned"), directValidator) must beEmpty
       unversioned.evaluate(JString("in-version-2"), directValidator) must haveSize(1)
     }
 

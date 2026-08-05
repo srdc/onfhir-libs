@@ -17,6 +17,8 @@ import scala.language.postfixOps
  */
 class FhirTerminologyValidator(fhirConfig:BaseFhirConfig, terminologyServices:Seq[(TerminologyServiceConf, IFhirTerminologyService)]) extends IFhirTerminologyValidator{
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
+  /** Keys used by the parsers for a definition that does not declare a business version (in preference order) */
+  private val unversionedPlaceholders:Seq[String] = Seq("*", "latest")
   /**
    * Check if a value set is supported for validation within OnFHir setup
    * @param vsUrl   URL of the value set
@@ -163,8 +165,34 @@ class FhirTerminologyValidator(fhirConfig:BaseFhirConfig, terminologyServices:Se
       .get(vsUrl)
       .flatMap(versionMap => version match {
         case Some(v) => versionMap.get(v)
-        case None  => versionMap.toSeq.sortBy(_._1).headOption.map(_._2)
+        case None  => findLatestValueSet(versionMap)
       })
+  }
+
+  /**
+   * Select the ValueSet definition to use when it is referred without a business version, following the same
+   * convention as FHIRUtil.getMentionedProfile does for profiles; the placeholder key used for a definition without
+   * a version wins, otherwise the latest version is deduced by comparing the version parts numerically
+   * e.g. 9, 10 --> 10
+   * @param versionMap  All definitions of a ValueSet (ValueSet.version -> definition)
+   * @return
+   */
+  private def findLatestValueSet(versionMap:Map[String, ValueSetRestrictions]):Option[ValueSetRestrictions] = {
+    //If there is only one, just return it
+    if (versionMap.size <= 1)
+      versionMap.headOption.map(_._2)
+    else
+      //Parsers key a definition without a version with a placeholder ('*' for ValueSets, 'latest' for profiles)
+      unversionedPlaceholders
+        .flatMap(versionMap.get)
+        .headOption
+        .orElse(
+          FHIRUtil
+            .findLatestFhirVersion(versionMap.keys.toSeq)
+            .flatMap(versionMap.get)
+        )
+        //Versions are not in a comparable format e.g. 1.0.0-draft, so fall back to the greatest key
+        .orElse(versionMap.toSeq.sortBy(_._1).lastOption.map(_._2))
   }
 }
 

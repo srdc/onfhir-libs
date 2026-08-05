@@ -204,6 +204,11 @@ configured terminology can express. The following gaps are known:
 - When neither a local `ValueSet` nor an external service claims a bound
   `ValueSet`, binding validation is skipped and reported as a warning rather
   than an error, so such warnings mark unvalidated bindings.
+- A bound `ValueSet` referred without a business version resolves to the
+  definition keyed without a version if present, otherwise to the greatest
+  version key compared numerically part by part, e.g. `10` over `9`. When any
+  key in the set is not purely numeric, such as `1.0.0-draft`, the versions are
+  not comparable and the greatest key by plain string order is used instead.
 
 ## Test guidance
 
