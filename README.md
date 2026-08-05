@@ -49,6 +49,13 @@ Applications using several modules can import the optional BOM:
 </dependencyManagement>
 ```
 
+## Logging
+
+Modules log through `slf4j-api` and do not include or configure an SLF4J
+provider. The consuming application selects one provider, such as Logback,
+Log4j 2, or `java.util.logging`, at deployment time. Applications that do not
+install a provider receive SLF4J's no-operation fallback behavior.
+
 ## Build and verification
 
 JDK 17 and Maven are used for the verified build; emitted bytecode targets
