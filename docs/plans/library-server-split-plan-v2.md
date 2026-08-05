@@ -1274,6 +1274,7 @@ dependency; the class keeps its `io.onfhir.validation` package.
 | concrete `new SubscriptionUtil(config, settings, handling)` | release-specific `SubscriptionUtil` obtained from `IFhirServerConfigurator.getSubscriptionUtil(...)` | 3.5 - implemented 2026-08-03 |
 | `new BaseFhirProfileHandler(FhirServerConfig)` | `new BaseFhirProfileHandler(BaseFhirConfig)`; existing callers pass the subtype unchanged | 5A - implemented 2026-08-05 |
 | `FHIRSearchParameter.components: Set[String]` | `components: Seq[String]`, carrying the declared component order; a composite search statement binds its `$` separated value parts to the components positionally, which an unordered set cannot express | 5A - implemented 2026-08-05 |
+| `FhirExpressionEvaluator.evaluateExpression`/`satisfies` throwing `FhirExpressionException` synchronously for an unregistered language | the same exception reported through the returned `Future`, so callers of these `Future`-returning methods need only `recover`; `validateExpression` still throws because it returns `Unit`. Deliberate behavioral change: a caller that only wrapped the call site in `try`/`catch` must handle the failed `Future` instead | 5A - implemented 2026-08-05 |
 
 ### 7.3 Build and version contracts
 
