@@ -20,6 +20,7 @@ in the split plan rather than suppressing individual class findings.
 | Config `BaseFhirServerConfigurator` missing | server configurator moved to Core (section 7.1, Phase 1D) |
 | Validation and R4 parser constructor/parse-element signatures | endpoint/capability defaults are explicit and structure parsers carry element metadata (section 7.2, Phase 1C) |
 | `AuthzContext`, `AuthzResult`, `OperationConf`, `OperationParamDef`, and `ElementRestrictions` signatures | pre-split 3.3-to-4.0 model evolution retained on the approved release line; consumers must recompile and use JSON-valued auth context parameters, `AuthzConstraints`, level-aware operation parameters, and string profile provenance |
+| `FHIRSearchParameter` constructor, `components`, `copy`, and `apply` signatures | composite component URLs became an ordered `Seq`, because a composite search statement binds its `$` separated value parts to the components positionally and an unordered set cannot express that; consumers must recompile and pass the components in declaration order (section 7.2, Phase 5A) |
 | Query, Template, Definitions, and R5 artifacts | new artifacts with no public `3.3` baseline |
 | Expression | binary compatible with `3.3` |
 

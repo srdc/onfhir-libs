@@ -1273,6 +1273,7 @@ dependency; the class keeps its `io.onfhir.validation` package.
 | Common impossible states throwing `InternalServerException` | `IllegalStateException`; HTTP 500 exception remains in Core | 3.5 - implemented 2026-08-03 |
 | concrete `new SubscriptionUtil(config, settings, handling)` | release-specific `SubscriptionUtil` obtained from `IFhirServerConfigurator.getSubscriptionUtil(...)` | 3.5 - implemented 2026-08-03 |
 | `new BaseFhirProfileHandler(FhirServerConfig)` | `new BaseFhirProfileHandler(BaseFhirConfig)`; existing callers pass the subtype unchanged | 5A - implemented 2026-08-05 |
+| `FHIRSearchParameter.components: Set[String]` | `components: Seq[String]`, carrying the declared component order; a composite search statement binds its `$` separated value parts to the components positionally, which an unordered set cannot express | 5A - implemented 2026-08-05 |
 
 ### 7.3 Build and version contracts
 
