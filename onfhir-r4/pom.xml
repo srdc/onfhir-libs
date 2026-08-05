@@ -13,16 +13,30 @@
     <artifactId>onfhir-r4_2.13</artifactId>
     <properties><library.gates.skip>false</library.gates.skip></properties>
     <name>FHIR R4 implementation</name>
+    <!-- Declared explicitly because Maven appends the artifactId to inherited
+         URLs; published POMs must point at the repository root -->
+    <url>https://github.com/srdc/onfhir-libs</url>
+    <scm>
+        <connection>scm:git:https://github.com/srdc/onfhir-libs.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/srdc/onfhir-libs.git</developerConnection>
+        <url>https://github.com/srdc/onfhir-libs</url>
+        <tag>HEAD</tag>
+    </scm>
 
     <packaging>jar</packaging>
 
     <build>
         <sourceDirectory>src/main/scala</sourceDirectory>
+        <testSourceDirectory>src/test/scala</testSourceDirectory>
         <plugins>
             <!-- Allows compiling/testing/running/documenting Scala code in Maven. -->
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
@@ -41,6 +55,45 @@
             <groupId>io.onfhir</groupId>
             <artifactId>onfhir-validation_${scala.binary.version}</artifactId>
             <version>${onfhir.libs.version}</version>
+        </dependency>
+        <!-- Provider-neutral logging API -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <!-- Integration tests only: the real FHIR R4 and R5 standard definitions
+             packages and the release-neutral configuration pipeline that reads
+             them. The R5 package is tested here because the onFHIR R5 server
+             configurator reuses R4Parser for foundation resources. None of these
+             is a compile dependency of this module. -->
+        <dependency>
+            <groupId>io.onfhir</groupId>
+            <artifactId>onfhir-definitions-r4</artifactId>
+            <version>${onfhir.libs.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.onfhir</groupId>
+            <artifactId>onfhir-definitions-r5</artifactId>
+            <version>${onfhir.libs.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.onfhir</groupId>
+            <artifactId>onfhir-config_${scala.binary.version}</artifactId>
+            <version>${onfhir.libs.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Unit Testing -->
+        <dependency>
+            <groupId>org.specs2</groupId>
+            <artifactId>specs2-core_${scala.binary.version}</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.specs2</groupId>
+            <artifactId>specs2-junit_${scala.binary.version}</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
