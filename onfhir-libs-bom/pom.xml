@@ -12,6 +12,15 @@
     <artifactId>onfhir-libs-bom</artifactId>
     <packaging>pom</packaging>
     <name>onFHIR Libraries BOM</name>
+    <!-- Declared explicitly because Maven appends the artifactId to inherited
+         URLs; published POMs must point at the repository root -->
+    <url>https://github.com/srdc/onfhir-libs</url>
+    <scm>
+        <connection>scm:git:https://github.com/srdc/onfhir-libs.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/srdc/onfhir-libs.git</developerConnection>
+        <url>https://github.com/srdc/onfhir-libs</url>
+        <tag>HEAD</tag>
+    </scm>
     <description>Dependency management for the onFHIR reusable library family.</description>
 
     <build>
@@ -66,7 +75,7 @@
             </dependency>
             <dependency>
                 <groupId>io.onfhir</groupId>
-                <artifactId>onfhir-template-engine</artifactId>
+                <artifactId>onfhir-template-engine_2.13</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

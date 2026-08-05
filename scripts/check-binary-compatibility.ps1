@@ -23,10 +23,16 @@ $artifacts = [ordered]@{
     "onfhir-config" = "onfhir-config_2.13"
     "onfhir-expression" = "onfhir-expression_2.13"
     "onfhir-validation" = "onfhir-validation_2.13"
-    "onfhir-template-engine" = "onfhir-template-engine"
+    "onfhir-template-engine" = "onfhir-template-engine_2.13"
+    # Resources-only artifacts: no Scala binary-version suffix and no classes to
+    # compare, but they are still tracked so the report covers every published
+    # coordinate.
+    "onfhir-definitions-r4" = "onfhir-definitions-r4"
+    "onfhir-definitions-r5" = "onfhir-definitions-r5"
     "onfhir-r4" = "onfhir-r4_2.13"
 }
-$newArtifacts = @("onfhir-query_2.13", "onfhir-template-engine")
+$newArtifacts = @("onfhir-query_2.13", "onfhir-template-engine_2.13",
+    "onfhir-definitions-r4", "onfhir-definitions-r5")
 
 $modules = ($artifacts.Keys -join ",")
 Push-Location $repoRoot

@@ -18,7 +18,13 @@ $artifacts = [ordered]@{
     "onfhir-config_2.13" = "jar"
     "onfhir-expression_2.13" = "jar"
     "onfhir-validation_2.13" = "jar"
-    "onfhir-template-engine" = "jar"
+    # Suffix corrected per the approved pre-release decision of 2026-08-04.
+    "onfhir-template-engine_2.13" = "jar"
+    # Resources only, so no Scala binary-version suffix. Their sources and
+    # javadoc JARs are the marker/empty JARs attached by each module's release
+    # profile.
+    "onfhir-definitions-r4" = "jar"
+    "onfhir-definitions-r5" = "jar"
     "onfhir-r4_2.13" = "jar"
     "onfhir-libs-bom" = "pom"
 }
