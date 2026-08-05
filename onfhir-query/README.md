@@ -294,14 +294,22 @@ composite's own expression, not the component elements: the component element
 paths are taken from the configurations named in `targets`, and the `$`
 separated parts of the search statement bind to those components in order.
 
-A component configuration's paths are absolute from the resource root, so a
-composite is evaluated only where its base context is the resource itself (an
-empty path), which covers parameters such as Observation `code-value-quantity`.
-Where the base context is a nested element — Observation `component`, the
-`context-type-value` family's `useContext`, or the MolecularSequence coordinate
-composites' `referenceSeq` — the component paths do not resolve inside that
-element and the criterion does not match. Path restrictions are applied while
-extracting values. The evaluator does not resolve remote references, call
+A component configuration's paths are absolute from the resource root, so they
+are made relative to the base context they are evaluated against. A composite
+therefore also resolves where its base context is a nested element, such as
+Observation `component`, the `context-type-value` family's `useContext`, or the
+MolecularSequence coordinate composites' `referenceSeq`. Every component must be
+satisfied within the same base context element, so a statement is not satisfied
+by components matching in different repeating elements. Where a composite
+declares both the resource root and a more specific element as base contexts,
+component paths under the more specific one are excluded from the root context,
+which keeps that correlation in place for parameters such as Observation
+`combo-code-value-quantity`.
+
+Path restrictions are applied while extracting values; a restriction is
+positioned relative to the end of its path, so it survives being made relative
+to a base context unless it addresses an element outside it, in which case that
+path is not evaluated. The evaluator does not resolve remote references, call
 terminology services, convert UCUM units, or inspect other resources in a
 repository.
 

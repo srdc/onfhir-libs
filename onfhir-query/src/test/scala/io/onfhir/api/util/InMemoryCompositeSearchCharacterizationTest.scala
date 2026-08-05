@@ -186,6 +186,121 @@ class InMemoryCompositeSearchCharacterizationTest extends Specification {
     }
   }
 
+  //A component's paths are absolute from the resource root, so they are made
+  //relative to the base context they are evaluated against.
+  "handleCompositeParameter on a composite whose base context is a nested element" should {
+    val codeSystem =
+      """{
+        |  "resourceType": "CodeSystem",
+        |  "useContext": [{
+        |    "code": {"system": "http://terminology.hl7.org/CodeSystem/usage-context-type", "code": "focus"},
+        |    "valueCodeableConcept": {"coding": [{"system": "http://snomed.info/sct", "code": "260385009"}]}
+        |  }]
+        |}""".stripMargin.parseJson
+
+    //Two usage contexts, neither of which satisfies both components on its own
+    val splitCodeSystem =
+      """{
+        |  "resourceType": "CodeSystem",
+        |  "useContext": [
+        |    {
+        |      "code": {"system": "http://terminology.hl7.org/CodeSystem/usage-context-type", "code": "focus"},
+        |      "valueCodeableConcept": {"coding": [{"system": "http://snomed.info/sct", "code": "999"}]}
+        |    },
+        |    {
+        |      "code": {"system": "http://terminology.hl7.org/CodeSystem/usage-context-type", "code": "other"},
+        |      "valueCodeableConcept": {"coding": [{"system": "http://snomed.info/sct", "code": "260385009"}]}
+        |    }
+        |  ]
+        |}""".stripMargin.parseJson
+
+    val contextTypeValue =
+      conf(
+        "context-type-value",
+        FHIR_PARAMETER_TYPES.COMPOSITE,
+        Seq("useContext[i]"),
+        Seq("UsageContext"),
+        Seq("context-type", "context"))
+
+    val FOCUS = "http://terminology.hl7.org/CodeSystem/usage-context-type|focus"
+
+    "match when both components are satisfied by the same element" in {
+      outcome(codeSystem, contextTypeValue, s"$FOCUS$$$SNOMED_CODE") mustEqual "returned true"
+    }
+
+    "reject a statement whose value component does not match" in {
+      outcome(codeSystem, contextTypeValue, s"$FOCUS$$http://snomed.info/sct|999") mustEqual "returned false"
+    }
+
+    "reject a statement whose components are swapped" in {
+      outcome(codeSystem, contextTypeValue, s"$SNOMED_CODE$$$FOCUS") mustEqual "returned false"
+    }
+
+    //The correlation requirement: each component matches, but in different elements
+    "reject a statement satisfied only across two different elements" in {
+      outcome(splitCodeSystem, contextTypeValue, s"$FOCUS$$$SNOMED_CODE") mustEqual "returned false"
+    }
+  }
+
+  //A composite declaring both the resource root and a repeating element as base
+  //contexts, as Observation combo-code-value-quantity does
+  "handleCompositeParameter on a composite with several base contexts" should {
+    val comboCodeConf =
+      conf("combo-code", FHIR_PARAMETER_TYPES.TOKEN, Seq("code", "component.code"), Seq(FHIR_DATA_TYPES.CODEABLE_CONCEPT, FHIR_DATA_TYPES.CODEABLE_CONCEPT))
+    val comboValueQuantityConf =
+      conf("combo-value-quantity", FHIR_PARAMETER_TYPES.QUANTITY, Seq("valueQuantity", "component.valueQuantity"), Seq(FHIR_DATA_TYPES.QUANTITY, FHIR_DATA_TYPES.QUANTITY))
+
+    val comboConfs = Seq(comboCodeConf, comboValueQuantityConf).map(c => c.pname -> c).toMap
+
+    val comboComposite =
+      conf(
+        "combo-code-value-quantity",
+        FHIR_PARAMETER_TYPES.COMPOSITE,
+        Seq("", "component"),
+        Seq(RESOURCE_TARGET_TYPE, "BackboneElement"),
+        Seq("combo-code", "combo-value-quantity"))
+
+    //One component carries the code, a different one carries the quantity
+    val componentObservation =
+      """{
+        |  "resourceType": "Observation",
+        |  "component": [
+        |    {
+        |      "code": {"coding": [{"system": "http://loinc.org", "code": "85354-9"}]},
+        |      "valueQuantity": {"value": 9.9, "system": "http://unitsofmeasure.org", "code": "mg"}
+        |    },
+        |    {
+        |      "code": {"coding": [{"system": "http://loinc.org", "code": "8480-6"}]},
+        |      "valueQuantity": {"value": 5.5, "system": "http://unitsofmeasure.org", "code": "mg"}
+        |    }
+        |  ]
+        |}""".stripMargin.parseJson
+
+    def comboOutcome(resource: JValue, value: String): String =
+      try {
+        val parameter =
+          Parameter(FHIR_PARAMETER_CATEGORIES.NORMAL, comboComposite.ptype, comboComposite.pname, Seq("" -> value))
+        val values = ImMemorySearchUtil.extractValuesAndTargetTypes(comboComposite, resource)
+        s"returned ${ImMemorySearchUtil.handleCompositeParameter(parameter, comboComposite, values, comboConfs, endpointSettings)}"
+      } catch {
+        case t: Throwable => s"${t.getClass.getSimpleName}: ${t.getMessage}"
+      }
+
+    "match through the resource root base context" in {
+      comboOutcome(quantityObservation, s"$LOINC_CODE$$$MG_QUANTITY") mustEqual "returned true"
+    }
+
+    "match through the repeating element base context" in {
+      comboOutcome(componentObservation, s"http://loinc.org|8480-6$$$MG_QUANTITY") mustEqual "returned true"
+    }
+
+    //The root base context must not pair a code from one component with a
+    //quantity from another
+    "reject a statement satisfied only across two different components" in {
+      comboOutcome(componentObservation, s"$LOINC_CODE$$$MG_QUANTITY") mustEqual "returned false"
+    }
+  }
+
   "handleCompositeParameter" should {
     "ignore components that have no corresponding value part" in {
       outcome(conceptObservation, codeValueConcept, LOINC_CODE) mustEqual "returned true"
@@ -193,34 +308,6 @@ class InMemoryCompositeSearchCharacterizationTest extends Specification {
 
     "reject a statement whose only value part matches no component element" in {
       outcome(conceptObservation, codeValueConcept, "http://loinc.org|999") mustEqual "returned false"
-    }
-
-    //Known limitation: a component configuration's paths are absolute from the
-    //resource root, so they do not resolve inside a nested base context element.
-    //Composites such as the context-type-value family therefore never match,
-    //even though their configuration is now correct.
-    "not match a composite whose base context is a nested element" in {
-      val codeSystem =
-        """{
-          |  "resourceType": "CodeSystem",
-          |  "useContext": [{
-          |    "code": {"system": "http://terminology.hl7.org/CodeSystem/usage-context-type", "code": "focus"},
-          |    "valueCodeableConcept": {"coding": [{"system": "http://snomed.info/sct", "code": "260385009"}]}
-          |  }]
-          |}""".stripMargin.parseJson
-
-      val contextTypeValue =
-        conf(
-          "context-type-value",
-          FHIR_PARAMETER_TYPES.COMPOSITE,
-          Seq("useContext[i]"),
-          Seq("UsageContext"),
-          Seq("context-type", "context"))
-
-      val statement =
-        "http://terminology.hl7.org/CodeSystem/usage-context-type|focus$http://snomed.info/sct|260385009"
-
-      outcome(codeSystem, contextTypeValue, statement) mustEqual "returned false"
     }
 
     "reject a statement when the composite's base context resolves to nothing" in {

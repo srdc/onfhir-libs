@@ -83,17 +83,63 @@ object ImMemorySearchUtil {
                   Parameter(FHIR_PARAMETER_CATEGORIES.NORMAL, spc._2.get.ptype, spc._1, FHIRSearchParameterValueParser.parseSimpleValue(v, spc._2.get.ptype))
             }
 
-        //Base context elements the composite's expression points to
-        val baseElements = values.flatMap(_._1)
+        //Base context paths of the composite and the elements extracted for each of them
+        val baseContextPaths = sp.extractElementPathsTargetTypesAndRestrictions().map(_._1)
 
         //All components should be satisfied within the same base context element
-        baseElements.exists(baseElement =>
-          childParamsConstructed.forall(p =>
-            handleSimpleParameter(p._2, p._1, extractValuesAndTargetTypes(p._1, baseElement), endpointSettings)
-          )
-        )
+        baseContextPaths.zip(values.map(_._1)).exists {
+          case (basePath, baseElements) =>
+            val relativeChildParams =
+              childParamsConstructed.map(p => relativizeToBaseContext(p._1, basePath, baseContextPaths) -> p._2)
+
+            baseElements.exists(baseElement =>
+              relativeChildParams.forall(p =>
+                handleSimpleParameter(p._2, p._1, extractValuesAndTargetTypes(p._1, baseElement), endpointSettings)
+              )
+            )
+        }
     }
     result
+  }
+
+  /**
+   * Component configurations hold paths that are absolute from the resource root, while a composite
+   * is evaluated against the elements of one of its base contexts. Restrict a component
+   * configuration to the paths belonging to the given base context and rewrite them relative to it,
+   * so that they resolve against a base context element.
+   *
+   * A path is dropped when it belongs to a more specific base context of the same composite, so
+   * that a component cannot be satisfied from a different repeating element than its siblings.
+   *
+   * A restriction is positioned by counting '@' from the end of its path, so stripping a prefix
+   * keeps it aligned; a path is dropped when a restriction on it addresses an element that the
+   * stripped prefix removed, as that cannot be evaluated from inside the base context element.
+   *
+   * @param childConf         Configuration of the component parameter
+   * @param basePath          Base context path to make the component paths relative to
+   * @param baseContextPaths  All base context paths of the composite
+   * @return
+   */
+  private def relativizeToBaseContext(childConf:SearchParameterConf, basePath:String, baseContextPaths:Seq[String]):SearchParameterConf = {
+    val prefix = if(basePath == "") "" else s"$basePath."
+    val moreSpecificPrefixes =
+      baseContextPaths
+        .filter(other => other != basePath && other.startsWith(prefix))
+        .map(other => s"$other.")
+
+    val keptPaths =
+      childConf
+        .extractElementPathsTargetTypesAndRestrictions()
+        .filter(ptr => ptr._1.startsWith(prefix))
+        .filterNot(ptr => moreSpecificPrefixes.exists(ptr._1.startsWith))
+        .map(ptr => (ptr._1.drop(prefix.length), ptr._2, ptr._3))
+        .filter(ptr => ptr._3.forall(_._1.count(_ == '@') < ptr._1.split('.').length))
+
+    childConf.copy(
+      paths = keptPaths.map(_._1),
+      targetTypes = keptPaths.map(_._2),
+      restrictions = keptPaths.map(_._3)
+    )
   }
 
 
