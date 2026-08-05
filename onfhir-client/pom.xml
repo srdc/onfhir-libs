@@ -12,6 +12,15 @@
     <artifactId>onfhir-client_2.13</artifactId>
     <properties><library.gates.skip>false</library.gates.skip></properties>
     <name>FHIR Client Library</name>
+    <!-- Declared explicitly because Maven appends the artifactId to inherited
+         URLs; published POMs must point at the repository root -->
+    <url>https://github.com/srdc/onfhir-libs</url>
+    <scm>
+        <connection>scm:git:https://github.com/srdc/onfhir-libs.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/srdc/onfhir-libs.git</developerConnection>
+        <url>https://github.com/srdc/onfhir-libs</url>
+        <tag>HEAD</tag>
+    </scm>
     <description>This module a provides a Scala library that you can use as a FHIR client to construct and send FHIR
         requests (search, CRUD, operations) to a configured FHIR server (similar Firely .Net FHIR client) over HTTP.
     </description>
@@ -73,12 +82,12 @@
         <dependency>
             <groupId>org.specs2</groupId>
             <artifactId>specs2-core_${scala.binary.version}</artifactId>
-            <scope>provided</scope>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.specs2</groupId>
             <artifactId>specs2-junit_${scala.binary.version}</artifactId>
-            <scope>provided</scope>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

@@ -9,6 +9,15 @@
     <artifactId>onfhir-template-engine</artifactId>
     <properties><library.gates.skip>false</library.gates.skip></properties>
     <name>onfhir-template-engine</name>
+    <!-- Declared explicitly because Maven appends the artifactId to inherited
+         URLs; published POMs must point at the repository root -->
+    <url>https://github.com/srdc/onfhir-libs</url>
+    <scm>
+        <connection>scm:git:https://github.com/srdc/onfhir-libs.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/srdc/onfhir-libs.git</developerConnection>
+        <url>https://github.com/srdc/onfhir-libs</url>
+        <tag>HEAD</tag>
+    </scm>
     <packaging>jar</packaging>
     <build>
         <sourceDirectory>src/main/scala</sourceDirectory>
@@ -53,12 +62,12 @@
         <dependency>
             <groupId>org.specs2</groupId>
             <artifactId>specs2-core_${scala.binary.version}</artifactId>
-            <scope>provided</scope>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.specs2</groupId>
             <artifactId>specs2-junit_${scala.binary.version}</artifactId>
-            <scope>provided</scope>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

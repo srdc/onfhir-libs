@@ -58,3 +58,16 @@ Confidential employment agreements are intentionally not committed here.
 This approval unblocks Phase 5 extraction and relicensing of the nine library
 modules. It does not authorize changing the GPL-3.0 license of this monorepo or
 the Repofyr server repository.
+
+## Per-file source header decision
+
+- Decided 2026-08-05 by the maintainer: the library sources do NOT carry
+  per-file Apache-2.0 headers for the 4.0.0 release. Licensing is conveyed by
+  the repository root `LICENSE`, the `NOTICE` file, the license metadata in
+  every published POM, and the `META-INF/LICENSE` / `META-INF/NOTICE` files
+  packaged in every binary JAR. This is legally sufficient for Apache-2.0;
+  per-file headers were declined to avoid a repository-wide diff that would
+  pollute file history.
+- `docs/release/proposed-apache-source-header.txt` is retained as the agreed
+  header text in case the decision is revisited (for example, if individual
+  files start being copied into third-party codebases).
