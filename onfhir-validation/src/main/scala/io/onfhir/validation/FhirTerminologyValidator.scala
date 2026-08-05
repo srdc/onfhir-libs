@@ -158,7 +158,8 @@ class FhirTerminologyValidator(fhirConfig:BaseFhirConfig, terminologyServices:Se
    * @return
    */
   private def getValueSet(vsUrl:String, version:Option[String] = None):Option[ValueSetRestrictions] = {
-    fhirConfig.valueSetRestrictions
+    Option(fhirConfig.valueSetRestrictions)
+      .getOrElse(Map.empty[String, Map[String, ValueSetRestrictions]])
       .get(vsUrl)
       .flatMap(versionMap => version match {
         case Some(v) => versionMap.get(v)

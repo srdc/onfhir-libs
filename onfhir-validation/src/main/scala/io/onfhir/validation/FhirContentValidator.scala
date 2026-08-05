@@ -50,19 +50,33 @@ class FhirContentValidator(
    * @param value FHIR content
    */
   def validateComplexContent(value: JObject): Future[Seq[OutcomeIssue]] = {
+    validateComplexContent(value, None)
+  }
+
+  /**
+    * Validate a complex FHIR content, retaining the path at which it occurs in
+    * a containing resource. This is used by the SDK facade for recursive
+    * resource validation.
+    */
+  private[validation] def validateComplexContent(value: JObject, parentPath: Option[String]): Future[Seq[OutcomeIssue]] = {
     logger.debug(s"Validating against profile chain starting with $profileUrl...")
     if (rootProfileChain.isEmpty)
       throw new InitializationException(s"Resource profile with url $profileUrl is not recognized in this onFhir setup !")
 
+    // A content validator is normally used once. Reset the per-run state as a
+    // safeguard for callers that reuse one sequentially.
+    bundle = None
+    referencesToCheck.clear()
+
     for {
-      issues <- validateComplexContentAgainstProfile(rootProfileChain, value, None, Nil)
+      issues <- validateComplexContentAgainstProfile(rootProfileChain, value, parentPath, Nil)
       refIssues <- validateReferences()
     } yield issues ++ refIssues
 
   }
 
   /**
-   * Validate existence of referenced resources if requsted
+   * Validate existence of referenced resources if requested
    * @return
    */
   private def validateReferences(): Future[Seq[OutcomeIssue]] = {

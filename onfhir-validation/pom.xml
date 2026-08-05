@@ -45,6 +45,11 @@
             <artifactId>onfhir-common_${scala.binary.version}</artifactId>
             <version>${onfhir.libs.version}</version>
         </dependency>
+        <!-- Provider-neutral logging API -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
         <!-- Unit Testing -->
         <dependency>
             <groupId>org.specs2</groupId>
