@@ -1,7 +1,12 @@
 package io.onfhir.expression
 
+import io.onfhir.api.{FHIR_PARAMETER_CATEGORIES, FHIR_PARAMETER_TYPES}
+import io.onfhir.api.model.Parameter
+import org.junit.runner.RunWith
 import org.specs2.mutable.Specification
+import org.specs2.runner.JUnitRunner
 
+@RunWith(classOf[JUnitRunner])
 class XFhirQueryParserRegexTest extends Specification {
 
   sequential
@@ -106,6 +111,53 @@ class XFhirQueryParserRegexTest extends Specification {
         "date"   -> Seq("gt{{ iif(%x='a=b','2024-01-01','2025-01-01') }}"),
         "status" -> Seq("final")
       )
+    }
+  }
+
+  "XFhirQueryUtil.splitResourceTypeAndQuery" should {
+    "split a resource type and query part" in {
+      XFhirQueryUtil.splitResourceTypeAndQuery(
+        " Observation?status=final&code={{%code}} "
+      ) mustEqual "Observation" -> Some("status=final&code={{%code}}")
+    }
+
+    "return no query part when the question mark is absent or final" in {
+      XFhirQueryUtil.splitResourceTypeAndQuery("Observation") mustEqual
+        "Observation" -> None
+      XFhirQueryUtil.splitResourceTypeAndQuery("Observation?") mustEqual
+        "Observation" -> None
+    }
+
+    "reject an empty query or missing resource type" in {
+      XFhirQueryUtil.splitResourceTypeAndQuery("  ") must throwA[FhirExpressionException]
+      XFhirQueryUtil.splitResourceTypeAndQuery("?status=final") must
+        throwA[FhirExpressionException]
+    }
+  }
+
+  "XFhirQueryUtil.encodeParameterPreservingPlaceholders" should {
+    "delegate ordinary parameters to their standard encoding" in {
+      val parameter = Parameter(
+        FHIR_PARAMETER_CATEGORIES.NORMAL,
+        FHIR_PARAMETER_TYPES.STRING,
+        "name",
+        Seq("" -> "Alice Smith")
+      )
+
+      XFhirQueryUtil.encodeParameterPreservingPlaceholders(parameter) mustEqual
+        "name=Alice+Smith"
+    }
+
+    "retain braces and a search prefix around a placeholder" in {
+      val parameter = Parameter(
+        FHIR_PARAMETER_CATEGORIES.NORMAL,
+        FHIR_PARAMETER_TYPES.DATE,
+        "date",
+        Seq("gt" -> "{{today()}}")
+      )
+
+      XFhirQueryUtil.encodeParameterPreservingPlaceholders(parameter) mustEqual
+        "date=gt{{today()}}"
     }
   }
 }
