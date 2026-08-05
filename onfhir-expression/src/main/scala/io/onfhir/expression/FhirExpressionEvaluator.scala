@@ -3,15 +3,23 @@ package io.onfhir.expression
 import org.json4s.JsonAST.JValue
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 /**
  * Entrypoint for FHIR expression evaluation
+ *
+ * Dispatch is an exact match between [[FhirExpression.language]] and the handlers'
+ * [[IFhirExpressionLanguageHandler.languageSupported]], and the first registered handler with a matching value wins.
  *
  * @param languageHandlers  Modules that handle different expression languages
  */
 class FhirExpressionEvaluator(languageHandlers:Seq[IFhirExpressionLanguageHandler]) extends IFhirExpressionLanguageHandler {
   /**
    * Support language mime type e.g. text/fhirpath, application/x-fhir-query, text/template
+   *
+   * The facade implements the handler contract so it can be passed where a single handler is expected, but its own
+   * value is not a wildcard pattern; because dispatch uses exact equality, a nested facade is only ever selected for
+   * the literal language '*'. Compose the handler sequences instead of nesting facades.
    */
   override val languageSupported: String = "*"
 
@@ -47,8 +55,9 @@ class FhirExpressionEvaluator(languageHandlers:Seq[IFhirExpressionLanguageHandle
    * @return
    */
   def evaluateExpression(expression: FhirExpression, contextParams: Map[String, JValue], input:JValue)(implicit ex:ExecutionContext): Future[JValue] = {
-    findHandler(expression)
-      .evaluateExpression(expression, contextParams, input)
+    //Report an unsupported language through the returned Future, so a caller does not have to both catch and recover
+    Future.fromTry(Try(findHandler(expression)))
+      .flatMap(_.evaluateExpression(expression, contextParams, input))
   }
 
   /**
@@ -60,7 +69,8 @@ class FhirExpressionEvaluator(languageHandlers:Seq[IFhirExpressionLanguageHandle
    *  @return
    */
   def satisfies(expression: FhirExpression, contextParams: Map[String, JValue], input:JValue)(implicit ex:ExecutionContext): Future[Boolean] = {
-    findHandler(expression)
-      .satisfies(expression, contextParams, input)
+    //Report an unsupported language through the returned Future, as in evaluateExpression
+    Future.fromTry(Try(findHandler(expression)))
+      .flatMap(_.satisfies(expression, contextParams, input))
   }
 }

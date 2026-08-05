@@ -153,6 +153,18 @@ string equality, and the first registered handler with a matching value is
 selected, so an application should not register duplicate handlers for the
 same language.
 
+`FhirExpressionEvaluator` implements the same contract, so it can be supplied
+where one handler is expected. Its own `languageSupported` value is `*`, which
+is a placeholder rather than a wildcard pattern: because dispatch uses exact
+equality, a facade registered inside another facade is only ever selected for
+the literal language `*`. Compose the handler sequences instead of nesting
+facades.
+
+The examples above are executable in
+[`FhirExpressionReadmeExampleTest`](src/test/scala/io/onfhir/expression/FhirExpressionReadmeExampleTest.scala),
+and the dispatch contract is covered by
+[`FhirExpressionEvaluatorTest`](src/test/scala/io/onfhir/expression/FhirExpressionEvaluatorTest.scala).
+
 ## Current implementation
 
 The currently supplied implementation is
@@ -172,8 +184,13 @@ syntax and executable examples.
 ## Dispatch and error behavior
 
 - Handler selection is an exact match between `FhirExpression.language` and
-  `IFhirExpressionLanguageHandler.languageSupported`.
-- An unregistered language causes `FhirExpressionException`.
+  `IFhirExpressionLanguageHandler.languageSupported`. Matching is
+  case-sensitive, so `text/FHIRPath` does not select a handler registered for
+  `text/fhirpath`.
+- An unregistered language causes `FhirExpressionException`. The
+  value-returning methods report it through the returned `Future`, so
+  `recover` alone is enough; only the `Unit`-returning `validateExpression`
+  throws synchronously.
 - The selected handler owns language-specific syntax validation.
 - The selected handler determines whether value evaluation, boolean
   evaluation, or both are supported.
