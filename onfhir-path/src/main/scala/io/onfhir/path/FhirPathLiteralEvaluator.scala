@@ -5,7 +5,7 @@ import java.time.format.{DateTimeFormatter, DateTimeFormatterBuilder, SignStyle}
 import java.time.temporal.Temporal
 import io.onfhir.path.grammar.{FhirPathExprBaseVisitor, FhirPathExprParser}
 
-import java.time.temporal.ChronoField.{DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, MONTH_OF_YEAR, NANO_OF_SECOND, SECOND_OF_MINUTE, YEAR}
+import java.time.temporal.ChronoField.{DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, MONTH_OF_YEAR, NANO_OF_SECOND, OFFSET_SECONDS, SECOND_OF_MINUTE, YEAR}
 
 /**
   * Evaluator for FHIR Path literals
@@ -17,11 +17,17 @@ object FhirPathLiteralEvaluator extends FhirPathExprBaseVisitor[Seq[FhirPathResu
       .optionalStart()
       .appendLiteral(':')
       .appendValue(MINUTE_OF_HOUR, 2)
-      .optionalStart
+      .optionalStart()
       .appendLiteral(':')
       .appendValue(SECOND_OF_MINUTE, 2)
-      .optionalStart
+      .optionalStart()
       .appendFraction(NANO_OF_SECOND, 0, 3, true)
+      .optionalEnd()
+      .optionalEnd()
+      .optionalEnd()
+      .optionalStart()
+      .appendOffset("+HH:MM", "Z")
+      .optionalEnd()
       .parseStrict()
       .toFormatter
 
@@ -152,11 +158,12 @@ object FhirPathLiteralEvaluator extends FhirPathExprBaseVisitor[Seq[FhirPathResu
   def parseFhirQuantity(q:String):Option[FhirPathQuantity] = {
     fhirQuantityRegExp
       .findFirstMatchIn(q)
+      .filter(m => m.start == 0 && m.end == q.length)
       .flatMap(m => {
         val value = m.group(1)
         var unit = Option(m.group(5))
         if(unit.isEmpty) unit = dtUnits.get(m.group(6)).map(_.drop(1).dropRight(1))
-        unit.map(u =>FhirPathQuantity(FhirPathNumber(value.toDouble), u))
+        Some(FhirPathQuantity(FhirPathNumber(value.toDouble), unit.getOrElse("1")))
       })
   }
 
@@ -195,12 +202,11 @@ object FhirPathLiteralEvaluator extends FhirPathExprBaseVisitor[Seq[FhirPathResu
    * @return
    */
   def parseFhirTime(t:String):(LocalTime, Option[ZoneOffset]) = {
-    LocalTime.parse(t, fhirPathTimeFormatter) -> None
-    /*
-    parseFhirDateTimeBest("2019-01-01"+t) match {
-      case ldt:LocalDateTime => ldt.toLocalTime -> None
-      case zdt:ZonedDateTime => zdt.toLocalTime -> Some(zdt.getOffset)
-    }*/
+    val parsed = fhirPathTimeFormatter.parse(t)
+    val offset =
+      if (parsed.isSupported(OFFSET_SECONDS)) Some(ZoneOffset.ofTotalSeconds(parsed.get(OFFSET_SECONDS)))
+      else None
+    LocalTime.from(parsed) -> offset
   }
 
   def parseIdentifier(identifier:String):String = {

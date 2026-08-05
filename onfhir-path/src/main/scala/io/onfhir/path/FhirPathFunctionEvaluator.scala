@@ -211,7 +211,7 @@ class FhirPathFunctionEvaluator(context: FhirPathEnvironment, current: Seq[FhirP
         current
           .zipWithIndex
           .exists(c =>
-            new FhirPathExpressionEvaluator(context.copy(_index = c._2), Seq(c._1))
+            new FhirPathExpressionEvaluator(context.withIndex(c._2), Seq(c._1))
               .visit(criteria) match {
               case Seq(FhirPathBoolean(true)) => true
               case _ => false
@@ -241,7 +241,7 @@ class FhirPathFunctionEvaluator(context: FhirPathEnvironment, current: Seq[FhirP
       current
         .zipWithIndex
         .forall(c =>
-          new FhirPathExpressionEvaluator(context.copy(_index = c._2), Seq(c._1))
+          new FhirPathExpressionEvaluator(context.withIndex(c._2), Seq(c._1))
             .visit(criteria) match {
             case Seq(FhirPathBoolean(true)) => true
             case _ => false
@@ -353,7 +353,7 @@ class FhirPathFunctionEvaluator(context: FhirPathEnvironment, current: Seq[FhirP
     current
       .zipWithIndex
       .filter(c =>
-        new FhirPathExpressionEvaluator(context.copy(_index = c._2), Seq(c._1))
+        new FhirPathExpressionEvaluator(context.withIndex(c._2), Seq(c._1))
           .visit(criteria) match {
           case Seq(FhirPathBoolean(true)) => true
           case Seq(FhirPathBoolean(false)) => false
@@ -371,7 +371,7 @@ class FhirPathFunctionEvaluator(context: FhirPathEnvironment, current: Seq[FhirP
     current
       .zipWithIndex
       .flatMap(c => {
-        val r = new FhirPathExpressionEvaluator(context.copy(_index = c._2), Seq(c._1)).visit(projection)
+        val r = new FhirPathExpressionEvaluator(context.withIndex(c._2), Seq(c._1)).visit(projection)
         r
       })
   }
@@ -748,6 +748,15 @@ class FhirPathFunctionEvaluator(context: FhirPathEnvironment, current: Seq[FhirP
     current ++ otherCollection
   }
 
+  @FhirPathFunction(
+    documentation = FhirPathFunctionDocumentation(detail = "Merges the input and other collections, eliminating duplicate values.", usageWarnings = None, parameters = Some(Seq(FhirPathFunctionParameter(name = "other", detail = "The other collection.", examples = None))), returnValue = FhirPathFunctionReturn(detail = None, examples = Seq("{1, 2, 3}")), examples = Seq("(1 | 2).union(2 | 3)")),
+    insertText = "union(<other>)", detail = "", label = "union", kind = "Method", returnType = Seq(), inputType = Seq()
+  )
+  def union(other: ExpressionContext): Seq[FhirPathResult] = {
+    val otherCollection = new FhirPathExpressionEvaluator(context, current).visit(other)
+    (current ++ otherCollection).distinct
+  }
+
   /**
    * Conversion functions http://hl7.org/fhirpath/#conversion
    */
@@ -793,12 +802,23 @@ class FhirPathFunctionEvaluator(context: FhirPathEnvironment, current: Seq[FhirP
       case Seq(n: FhirPathNumber) if !n.isInteger() => throw new FhirPathException(s"Invalid function call 'toInteger' on value $n !!!")
       case Seq(FhirPathString(s)) => Try(s.toLong).toOption match {
         case Some(i) => Seq(FhirPathNumber(i))
-        case None => throw new FhirPathException(s"Invalid function call 'toInteger' on value $s of string type cannot be converted to integer!!")
+        case None => Nil
       }
       case Seq(FhirPathBoolean(b)) => if (b) Seq(FhirPathNumber(1)) else Seq(FhirPathNumber(0))
       case Seq(oth) => Nil
       case _ => throw new FhirPathException(s"Invalid function call 'toInteger' on multiple values!!!")
     }
+  }
+
+  @FhirPathFunction(
+    documentation = FhirPathFunctionDocumentation(detail = "Checks whether the input can be converted to an integer.", usageWarnings = None, parameters = None, returnValue = FhirPathFunctionReturn(detail = None, examples = Seq("true", "false")), examples = Seq("'3'.convertsToInteger()")),
+    insertText = "convertsToInteger()", detail = "", label = "convertsToInteger", kind = "Method", returnType = Seq(FHIR_DATA_TYPES.BOOLEAN), inputType = Seq(FHIR_PARAMETER_TYPES.NUMBER, FHIR_DATA_TYPES.STRING, FHIR_DATA_TYPES.BOOLEAN)
+  )
+  def convertsToInteger(): Seq[FhirPathResult] = conversionPredicate("convertsToInteger") {
+    case n: FhirPathNumber => n.isInteger()
+    case FhirPathString(s) => Try(s.toLong).isSuccess
+    case FhirPathBoolean(_) => true
+    case _ => false
   }
 
   /**
@@ -818,7 +838,7 @@ class FhirPathFunctionEvaluator(context: FhirPathEnvironment, current: Seq[FhirP
       case Seq(n: FhirPathNumber) => Seq(n)
       case Seq(FhirPathString(s)) => Try(s.toDouble).toOption match {
         case Some(d) => Seq(FhirPathNumber(d))
-        case None => throw new FhirPathException(s"Invalid function call 'toDecimal' on value $s of string type cannot be converted to decimal!!")
+        case None => Nil
       }
       case Seq(FhirPathBoolean(b)) => if (b) Seq(FhirPathNumber(1.0)) else Seq(FhirPathNumber(0.0))
       case Seq(oth) => throw new FhirPathException(s"Invalid function call 'toDecimal' on value $oth !!!")
@@ -885,6 +905,17 @@ class FhirPathFunctionEvaluator(context: FhirPathEnvironment, current: Seq[FhirP
     }
   }
 
+  @FhirPathFunction(
+    documentation = FhirPathFunctionDocumentation(detail = "Checks whether the input can be converted to a boolean.", usageWarnings = None, parameters = None, returnValue = FhirPathFunctionReturn(detail = None, examples = Seq("true", "false")), examples = Seq("'yes'.convertsToBoolean()")),
+    insertText = "convertsToBoolean()", detail = "", label = "convertsToBoolean", kind = "Method", returnType = Seq(FHIR_DATA_TYPES.BOOLEAN), inputType = Seq(FHIR_PARAMETER_TYPES.NUMBER, FHIR_DATA_TYPES.STRING, FHIR_DATA_TYPES.BOOLEAN)
+  )
+  def convertsToBoolean(): Seq[FhirPathResult] = conversionPredicate("convertsToBoolean") {
+    case n: FhirPathNumber => n.v == 0 || n.v == 1
+    case FhirPathString(s) => booleanStringValues.exists(_.equalsIgnoreCase(s))
+    case FhirPathBoolean(_) => true
+    case _ => false
+  }
+
   /**
    * Date conversion function
    *
@@ -907,6 +938,16 @@ class FhirPathFunctionEvaluator(context: FhirPathEnvironment, current: Seq[FhirP
       case Seq(_) => Nil
       case _ => throw new FhirPathException(s"Invalid function call 'toDate' on multiple values!!!")
     }
+  }
+
+  @FhirPathFunction(
+    documentation = FhirPathFunctionDocumentation(detail = "Checks whether the input can be converted to a Date.", usageWarnings = None, parameters = None, returnValue = FhirPathFunctionReturn(detail = None, examples = Seq("true", "false")), examples = Seq("'2012-01-01'.convertsToDate()")),
+    insertText = "convertsToDate()", detail = "", label = "convertsToDate", kind = "Method", returnType = Seq(FHIR_DATA_TYPES.BOOLEAN), inputType = Seq(FHIR_DATA_TYPES.DATETIME, FHIR_DATA_TYPES.STRING)
+  )
+  def convertsToDate(): Seq[FhirPathResult] = conversionPredicate("convertsToDate") {
+    case _: FhirPathDateTime => true
+    case FhirPathString(s) => Try(FhirPathLiteralEvaluator.parseFhirDateBest(s)).isSuccess
+    case _ => false
   }
 
   /**
@@ -932,6 +973,16 @@ class FhirPathFunctionEvaluator(context: FhirPathEnvironment, current: Seq[FhirP
       case Seq(_) => Nil
       case _ => throw new FhirPathException(s"Invalid function call 'toDateTime' on multiple values!!!")
     }
+  }
+
+  @FhirPathFunction(
+    documentation = FhirPathFunctionDocumentation(detail = "Checks whether the input can be converted to a DateTime.", usageWarnings = None, parameters = None, returnValue = FhirPathFunctionReturn(detail = None, examples = Seq("true", "false")), examples = Seq("'2012-01-01T10:00'.convertsToDateTime()")),
+    insertText = "convertsToDateTime()", detail = "", label = "convertsToDateTime", kind = "Method", returnType = Seq(FHIR_DATA_TYPES.BOOLEAN), inputType = Seq(FHIR_DATA_TYPES.DATETIME, FHIR_DATA_TYPES.STRING)
+  )
+  def convertsToDateTime(): Seq[FhirPathResult] = conversionPredicate("convertsToDateTime") {
+    case _: FhirPathDateTime => true
+    case FhirPathString(s) => Try(FhirPathLiteralEvaluator.parseFhirDateTimeBest(s)).isSuccess
+    case _ => false
   }
 
   @FhirPathFunction(
@@ -974,6 +1025,32 @@ class FhirPathFunctionEvaluator(context: FhirPathEnvironment, current: Seq[FhirP
     }
   }
 
+  @FhirPathFunction(
+    documentation = FhirPathFunctionDocumentation(detail = "Checks whether the input can be converted to a quantity.", usageWarnings = None, parameters = None, returnValue = FhirPathFunctionReturn(detail = None, examples = Seq("true", "false")), examples = Seq("'4 days'.convertsToQuantity()")),
+    insertText = "convertsToQuantity()", detail = "", label = "convertsToQuantity", kind = "Method", returnType = Seq(FHIR_DATA_TYPES.BOOLEAN), inputType = Seq(FHIR_PARAMETER_TYPES.NUMBER, FHIR_DATA_TYPES.QUANTITY, FHIR_DATA_TYPES.STRING, FHIR_DATA_TYPES.BOOLEAN)
+  )
+  def convertsToQuantity(): Seq[FhirPathResult] = conversionPredicate("convertsToQuantity") {
+    case _: FhirPathNumber | _: FhirPathQuantity | _: FhirPathBoolean => true
+    case c: FhirPathComplex => c.toQuantity().isDefined
+    case FhirPathString(s) => FhirPathLiteralEvaluator.parseFhirQuantity(s).isDefined
+    case _ => false
+  }
+
+  @FhirPathFunction(
+    documentation = FhirPathFunctionDocumentation(detail = "Checks whether the input can be converted to a quantity with the given unit.", usageWarnings = Some(Seq("Only same-unit conversion is supported; general UCUM conversion is not implemented.")), parameters = Some(Seq(FhirPathFunctionParameter(name = "unitExpr", detail = "The target UCUM unit or calendar-duration unit.", examples = Some(Seq("'mg'", "'d'"))))), returnValue = FhirPathFunctionReturn(detail = None, examples = Seq("true", "false")), examples = Seq("(3 'mg').convertsToQuantity('mg')")),
+    insertText = "convertsToQuantity(<unitExpr>)", detail = "", label = "convertsToQuantity", kind = "Method", returnType = Seq(FHIR_DATA_TYPES.BOOLEAN), inputType = Seq(FHIR_PARAMETER_TYPES.NUMBER, FHIR_DATA_TYPES.QUANTITY, FHIR_DATA_TYPES.STRING, FHIR_DATA_TYPES.BOOLEAN)
+  )
+  def convertsToQuantity(unitExpr: ExpressionContext): Seq[FhirPathResult] = {
+    val unit = evaluateQuantityUnit(unitExpr, "convertsToQuantity")
+    conversionPredicate("convertsToQuantity") {
+      case _: FhirPathNumber | _: FhirPathBoolean => normalizeQuantityUnit(unit) == "1"
+      case q: FhirPathQuantity => normalizeQuantityUnit(q.unit) == normalizeQuantityUnit(unit)
+      case c: FhirPathComplex => c.toQuantity().exists(q => normalizeQuantityUnit(q.unit) == normalizeQuantityUnit(unit))
+      case FhirPathString(s) => FhirPathLiteralEvaluator.parseFhirQuantity(s).exists(q => normalizeQuantityUnit(q.unit) == normalizeQuantityUnit(unit))
+      case _ => false
+    }
+  }
+
   /**
    * String conversion function
    *
@@ -992,11 +1069,65 @@ class FhirPathFunctionEvaluator(context: FhirPathEnvironment, current: Seq[FhirP
       case Seq(dt: FhirPathDateTime) => Seq(FhirPathString(FhirPathLiteralEvaluator.format(dt)))
       case Seq(t: FhirPathTime) => Seq(FhirPathString(FhirPathLiteralEvaluator.format(t)))
       case Seq(q: FhirPathQuantity) => Seq(FhirPathString(q.q.v.toString + " " + q.unit))
-      case Seq(FhirPathBoolean(b)) => if (b) Seq(FhirPathString("'true'")) else Seq(FhirPathString("'false'"))
+      case Seq(FhirPathBoolean(b)) => Seq(FhirPathString(b.toString))
       case Seq(oth) => Nil
       case _ => throw new FhirPathException(s"Invalid function call '_toString' on multiple values !!!")
     }
   }
+
+  @FhirPathFunction(
+    documentation = FhirPathFunctionDocumentation(detail = "Checks whether the input can be converted to a string.", usageWarnings = None, parameters = None, returnValue = FhirPathFunctionReturn(detail = None, examples = Seq("true", "false")), examples = Seq("3.convertsToString()")),
+    insertText = "convertsToString()", detail = "", label = "convertsToString", kind = "Method", returnType = Seq(FHIR_DATA_TYPES.BOOLEAN), inputType = Seq(FHIR_PARAMETER_TYPES.NUMBER, FHIR_DATA_TYPES.STRING, FHIR_DATA_TYPES.DATETIME, FHIR_DATA_TYPES.TIME, FHIR_DATA_TYPES.QUANTITY, FHIR_DATA_TYPES.BOOLEAN)
+  )
+  def convertsToString(): Seq[FhirPathResult] = conversionPredicate("convertsToString") {
+    case _: FhirPathNumber | _: FhirPathString | _: FhirPathDateTime | _: FhirPathTime | _: FhirPathQuantity | _: FhirPathBoolean => true
+    case _ => false
+  }
+
+  @FhirPathFunction(
+    documentation = FhirPathFunctionDocumentation(detail = "Converts the input to a Time.", usageWarnings = None, parameters = None, returnValue = FhirPathFunctionReturn(detail = None, examples = Seq("@T10:30")), examples = Seq("'10:30'.toTime()")),
+    insertText = "toTime()", detail = "", label = "toTime", kind = "Method", returnType = Seq(FHIR_DATA_TYPES.TIME), inputType = Seq(FHIR_DATA_TYPES.TIME, FHIR_DATA_TYPES.STRING)
+  )
+  def toTime(): Seq[FhirPathResult] = {
+    current match {
+      case Nil => Nil
+      case Seq(t: FhirPathTime) => Seq(t)
+      case Seq(FhirPathString(s)) => Try(FhirPathLiteralEvaluator.parseFhirTime(s)).toOption
+        .map { case (time, zone) => Seq(FhirPathTime(time, zone)) }
+        .getOrElse(Nil)
+      case Seq(_) => Nil
+      case _ => throw new FhirPathException("Invalid function call 'toTime' on multiple values!!!")
+    }
+  }
+
+  @FhirPathFunction(
+    documentation = FhirPathFunctionDocumentation(detail = "Checks whether the input can be converted to a Time.", usageWarnings = None, parameters = None, returnValue = FhirPathFunctionReturn(detail = None, examples = Seq("true", "false")), examples = Seq("'10:30'.convertsToTime()")),
+    insertText = "convertsToTime()", detail = "", label = "convertsToTime", kind = "Method", returnType = Seq(FHIR_DATA_TYPES.BOOLEAN), inputType = Seq(FHIR_DATA_TYPES.TIME, FHIR_DATA_TYPES.STRING)
+  )
+  def convertsToTime(): Seq[FhirPathResult] = conversionPredicate("convertsToTime") {
+    case _: FhirPathTime => true
+    case FhirPathString(s) => Try(FhirPathLiteralEvaluator.parseFhirTime(s)).isSuccess
+    case _ => false
+  }
+
+  private val booleanStringValues = Seq("T", "true", "Y", "yes", "1", "1.0", "F", "false", "N", "no", "0", "0.0")
+
+  private def conversionPredicate(functionName: String)(predicate: FhirPathResult => Boolean): Seq[FhirPathResult] =
+    current match {
+      case Nil => Nil
+      case Seq(value) => Seq(FhirPathBoolean(predicate(value)))
+      case _ => throw new FhirPathException(s"Invalid function call '$functionName' on multiple values!!!")
+    }
+
+  private def evaluateQuantityUnit(unitExpr: ExpressionContext, functionName: String): String =
+    new FhirPathExpressionEvaluator(context, current).visit(unitExpr) match {
+      case Seq(FhirPathString(unit)) => unit
+      case _ => throw new FhirPathException(s"Invalid function call '$functionName', unit expression should return a single string value!!!")
+    }
+
+  private def normalizeQuantityUnit(unit: String): String =
+    if (unit.length >= 2 && unit.head == '\'' && unit.last == '\'') unit.drop(1).dropRight(1)
+    else unit
 
   @FhirPathFunction(
     documentation = FhirPathFunctionDocumentation(detail = "Converts a quantity to a FHIR Path Object type (JSON).", usageWarnings = None, parameters = None, returnValue = FhirPathFunctionReturn(detail = Some("The method returns a FHIR Path Object (JSON) representing the quantity with value and unit."), examples = Seq("""<JSON>{"value": 3,"unit": "mg"}""")), examples = Seq("{'value': 3, 'unit': 'mg'}.toComplex()")),
@@ -1188,6 +1319,18 @@ class FhirPathFunctionEvaluator(context: FhirPathEnvironment, current: Seq[FhirP
   def length(): Seq[FhirPathResult] = {
     checkSingleString()
     current.headOption.map(c => Seq(FhirPathNumber(c.asInstanceOf[FhirPathString].s.length))).getOrElse(Nil)
+  }
+
+  @FhirPathFunction(
+    documentation = FhirPathFunctionDocumentation(detail = "Returns the characters in the input string as an ordered collection of one-character strings.", usageWarnings = None, parameters = None, returnValue = FhirPathFunctionReturn(detail = None, examples = Seq("{'a', 'b', 'c'}")), examples = Seq("'abc'.toChars()")),
+    insertText = "toChars()", detail = "", label = "toChars", kind = "Method", returnType = Seq(FHIR_DATA_TYPES.STRING), inputType = Seq(FHIR_DATA_TYPES.STRING)
+  )
+  def toChars(): Seq[FhirPathResult] = {
+    checkSingleString()
+    current.headOption
+      .map(_.asInstanceOf[FhirPathString].s.codePoints().toArray.toSeq)
+      .getOrElse(Seq.empty)
+      .map(codePoint => FhirPathString(new String(Character.toChars(codePoint))))
   }
 
   @FhirPathFunction(
@@ -1503,7 +1646,7 @@ class FhirPathFunctionEvaluator(context: FhirPathEnvironment, current: Seq[FhirP
     if (initValue.length > 1)
       throw new FhirPathException(s"Invalid function call 'aggregate', the initValue expression should return a single value!")
 
-    handleAggregate(context.copy(_total = initValue.headOption), aggExpr)
+    handleAggregate(context.withTotal(initValue.headOption), aggExpr)
   }
 
   /**
@@ -1519,8 +1662,8 @@ class FhirPathFunctionEvaluator(context: FhirPathEnvironment, current: Seq[FhirP
         .zipWithIndex
         .foldLeft(initialCntx) {
           case (cntx, cur) =>
-            val totalResult = new FhirPathExpressionEvaluator(cntx.copy(_index = cur._2), Seq(cur._1)).visit(aggExpr)
-            cntx.copy(_total = totalResult.headOption)
+            val totalResult = new FhirPathExpressionEvaluator(cntx.withIndex(cur._2), Seq(cur._1)).visit(aggExpr)
+            cntx.withTotal(totalResult.headOption)
         }
 
     finalContext._total.toSeq
@@ -1547,13 +1690,22 @@ class FhirPathFunctionEvaluator(context: FhirPathEnvironment, current: Seq[FhirP
     documentation = FhirPathFunctionDocumentation(detail = "Returns the current date.", usageWarnings = None, parameters = None, returnValue = FhirPathFunctionReturn(detail = None, examples = Seq("""<JSON>{"date": "2024-07-19"}""")), examples = Seq("today()")),
     insertText = "today()", detail = "", label = "today", kind = "Function", returnType = Seq(FHIR_DATA_TYPES.DATETIME), inputType = Seq()
   )
-  def today(): Seq[FhirPathResult] = Seq(FhirPathDateTime(LocalDate.now()))
+  def today(): Seq[FhirPathResult] = Seq(FhirPathDateTime(context.evaluationDateTime.toLocalDate))
 
   @FhirPathFunction(
     documentation = FhirPathFunctionDocumentation(detail = "Returns the current date and time, including timezone offset.", usageWarnings = None, parameters = None, returnValue = FhirPathFunctionReturn(detail = None, examples = Seq("""<JSON>{"dateTime": "2024-07-19T14:23:45.678+02:00"}""")), examples = Seq("now()")),
     insertText = "now()", detail = "", label = "now", kind = "Function", returnType = Seq(FHIR_DATA_TYPES.DATETIME), inputType = Seq()
   )
-  def now(): Seq[FhirPathResult] = Seq(FhirPathDateTime(ZonedDateTime.now()))
+  def now(): Seq[FhirPathResult] = Seq(FhirPathDateTime(context.evaluationDateTime))
+
+  @FhirPathFunction(
+    documentation = FhirPathFunctionDocumentation(detail = "Returns the current local time. Repeated calls within one expression use the same evaluation timestamp.", usageWarnings = None, parameters = None, returnValue = FhirPathFunctionReturn(detail = None, examples = Seq("@T14:23:45.678")), examples = Seq("timeOfDay()")),
+    insertText = "timeOfDay()", detail = "", label = "timeOfDay", kind = "Function", returnType = Seq(FHIR_DATA_TYPES.TIME), inputType = Seq()
+  )
+  def timeOfDay(): Seq[FhirPathResult] = {
+    val time = context.evaluationDateTime.toLocalTime
+    Seq(FhirPathTime(time.withNano(time.getNano / 1000000 * 1000000)))
+  }
 
   @FhirPathFunction(
     documentation = FhirPathFunctionDocumentation(detail = "Adds a String representation of the input collection to the diagnostic log, using the name argument as the name in the log.", usageWarnings = None, parameters = Some(Seq(FhirPathFunctionParameter(name = "nameExpr", detail = "The name expression.", None))), returnValue = FhirPathFunctionReturn(detail = None, examples = Seq("""<JSON>{"trace": "Logging collection with name: unmatched","collection": [1, 2, 3]}""")), examples = Seq("contained.where(criteria).trace('unmatched').empty()")),

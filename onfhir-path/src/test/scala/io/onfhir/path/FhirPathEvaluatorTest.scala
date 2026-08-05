@@ -482,15 +482,17 @@ class FhirPathEvaluatorTest extends Specification {
       FhirPathEvaluator().evaluateNumerical("Observation.component.exists().toInteger()", observation2) mustEqual Seq(1) //from boolean
       FhirPathEvaluator().evaluateNumerical("Observation.component.empty().toInteger()", observation2) mustEqual Seq(0) //from boolean
       FhirPathEvaluator().evaluate("Observation.effectiveDateTime.toInteger()", observation2).isEmpty mustEqual true
+      FhirPathEvaluator().evaluate("'not-an-integer'.toInteger()", observation2) must beEmpty
       //toDecimal
       FhirPathEvaluator().evaluateNumerical("Observation.component.code.coding[1].code.toDecimal()", observation2) mustEqual Seq(249227004) //from string
       FhirPathEvaluator().evaluateNumerical("Observation.valueQuantity.value.toDecimal()", observation) mustEqual Seq(6.3)
       FhirPathEvaluator().evaluateNumerical("Observation.component.exists().toDecimal()", observation2) mustEqual Seq(1) //from boolean
       FhirPathEvaluator().evaluateNumerical("Observation.component.empty().toDecimal()", observation2) mustEqual Seq(0) //from boolean
+      FhirPathEvaluator().evaluate("'not-a-decimal'.toDecimal()", observation2) must beEmpty
       //toString
       FhirPathEvaluator().evaluateString("Observation.valueQuantity.value.toString()", observation).head mustEqual "6.3" //from string
-      FhirPathEvaluator().evaluateString("Observation.component.exists().toString()", observation2).head mustEqual "'true'" //from boolean
-      FhirPathEvaluator().evaluateString("Observation.component.empty().toString()", observation2).head mustEqual "'false'" //from boolean
+      FhirPathEvaluator().evaluateString("Observation.component.exists().toString()", observation2).head mustEqual "true" //from boolean
+      FhirPathEvaluator().evaluateString("Observation.component.empty().toString()", observation2).head mustEqual "false" //from boolean
       FhirPathEvaluator().evaluateString("(1 'U').toString()", observation2).head mustEqual "1.0 'U'" //from boolean
       FhirPathEvaluator().evaluateString("Observation.effectivePeriod.start.toString()", observation).head mustEqual "2013-04-02T09:30:10+01:00" //from boolean
     }

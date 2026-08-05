@@ -3,8 +3,13 @@ package io.onfhir.path
 import io.onfhir.api.service.{IFhirIdentityService, IFhirTerminologyService}
 import io.onfhir.api.validation.{IFhirTerminologyValidator, IReferenceResolver}
 
+import java.time.ZonedDateTime
 import scala.collection.mutable
 import scala.util.matching.Regex
+
+private[path] final class FhirPathEvaluationClock {
+  lazy val evaluationDateTime: ZonedDateTime = ZonedDateTime.now()
+}
 
 /**
  * Fhir Path Engine environment variable store
@@ -28,6 +33,21 @@ case class FhirPathEnvironment(
                                 val _total:Option[FhirPathResult] = None,
                                 val isContentFhir:Boolean = true
                          ) {
+  private[path] var evaluationClock: FhirPathEvaluationClock = new FhirPathEvaluationClock
+
+  private[path] def evaluationDateTime: ZonedDateTime = evaluationClock.evaluationDateTime
+
+  private[path] def withIndex(index: Int): FhirPathEnvironment =
+    shareEvaluationClock(copy(_index = index))
+
+  private[path] def withTotal(total: Option[FhirPathResult]): FhirPathEnvironment =
+    shareEvaluationClock(copy(_total = total))
+
+  private def shareEvaluationClock(derived: FhirPathEnvironment): FhirPathEnvironment = {
+    derived.evaluationClock = evaluationClock
+    derived
+  }
+
   val vsPattern:Regex = "'vs-[A-Za-z0-9\\-]+'".r
   val extPattern:Regex = "'ext-[A-Za-z0-9\\-]+'".r
 
