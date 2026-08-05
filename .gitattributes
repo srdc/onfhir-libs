@@ -1,1 +1,10 @@
 *.sh		text eol=lf
+
+# HL7 FHIR specification content packaged by the onfhir-definitions-* modules.
+# These are upstream bytes, not our source. Both conformance statements use CRLF
+# and would otherwise be normalized by core.autocrlf, which makes the published
+# artifacts differ between a Windows and a Linux build host.
+onfhir-definitions-r4/src/main/resources/definitions-r4.json.zip	-text
+onfhir-definitions-r4/src/main/resources/conformance-statement-r4.json	-text
+onfhir-definitions-r5/src/main/resources/definitions-r5.json.zip	-text
+onfhir-definitions-r5/src/main/resources/conformance-statement-r5.json	-text

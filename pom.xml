@@ -73,6 +73,8 @@
         <module>onfhir-expression</module>
         <module>onfhir-validation</module>
         <module>onfhir-template-engine</module>
+        <module>onfhir-definitions-r4</module>
+        <module>onfhir-definitions-r5</module>
         <module>onfhir-r4</module>
         <module>onfhir-libs-bom</module>
     </modules>
@@ -106,6 +108,7 @@
         <compiler.plugin.version>3.12.1</compiler.plugin.version>
         <resources.plugin.version>3.3.1</resources.plugin.version>
         <source.plugin.version>3.2.1</source.plugin.version>
+        <antrun.plugin.version>3.1.0</antrun.plugin.version>
         <gpg.plugin.version>3.2.8</gpg.plugin.version>
         <enforcer.plugin.version>3.6.3</enforcer.plugin.version>
         <flatten.plugin.version>1.6.0</flatten.plugin.version>

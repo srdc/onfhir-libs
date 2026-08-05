@@ -74,6 +74,17 @@
                 <artifactId>onfhir-r4_2.13</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <!-- Resources-only artifacts: no Scala binary version suffix. -->
+            <dependency>
+                <groupId>io.onfhir</groupId>
+                <artifactId>onfhir-definitions-r4</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.onfhir</groupId>
+                <artifactId>onfhir-definitions-r5</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>

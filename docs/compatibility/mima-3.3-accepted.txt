@@ -289,6 +289,9 @@ NEW-ARTIFACT: no 3.3 artifact was available
 ## onfhir-definitions-r4
 NEW-ARTIFACT: no 3.3 artifact was available
 
+## onfhir-definitions-r5
+NEW-ARTIFACT: no 3.3 artifact was available
+
 ## onfhir-r4_2.13
 io.onfhir.r4.parsers.R4Parser.this: DirectMissingMethod
 io.onfhir.r4.parsers.StructureDefinitionParser.parseElementDef: IncompatibleMethType
