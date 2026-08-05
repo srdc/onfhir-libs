@@ -317,7 +317,9 @@ class TerminologyServiceClient(onFhirClient: IOnFhirClient)(implicit ec: Executi
       onFhirClient
       .operation(EXPAND_OPERATION_NAME)
       .on("ValueSet")
+      .addSimpleParam(EXPAND_OPERATION_REQUEST_PARAMS.URL, url)
 
+    version.foreach(v => request = request.addSimpleParam(EXPAND_OPERATION_REQUEST_PARAMS.VERSION, v))
     filter.foreach(f => request = request.addSimpleParam(EXPAND_OPERATION_REQUEST_PARAMS.FILTER, f))
     offset.foreach(o => request = request.addSimpleParam(EXPAND_OPERATION_REQUEST_PARAMS.OFFSET, "" + o))
     count.foreach(c => request = request.addSimpleParam(EXPAND_OPERATION_REQUEST_PARAMS.COUNT, "" + c))

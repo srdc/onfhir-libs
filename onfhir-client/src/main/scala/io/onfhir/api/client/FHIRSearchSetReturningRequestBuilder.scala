@@ -3,7 +3,6 @@ package io.onfhir.api.client
 import io.onfhir.api.model.{FHIRRequest, FHIRResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
 
 abstract class FHIRSearchSetReturningRequestBuilder(onFhirClient: IOnFhirClient, request: FHIRRequest)
   extends FhirSearchLikeRequestBuilder(onFhirClient, request)
@@ -70,9 +69,13 @@ abstract class FHIRSearchSetReturningRequestBuilder(onFhirClient: IOnFhirClient,
     bundle.flatMap {
       case r if r.hasNext() =>
         getMergedBundle(onFhirClient.next(r))
-          .map(r2 =>
-            r2.mergeResults(r)
-          )
+          .map { merged =>
+            //Prepend this page so the merged results keep the server's page order;
+            //the returned bundle stays the last page, so hasNext() is false on the merged result
+            merged.searchResults = r.searchResults ++ merged.searchResults
+            merged.includedResults = r.includedResults ++ merged.includedResults
+            merged
+          }
       case r =>
         Future.apply(r)
     }
@@ -86,26 +89,20 @@ abstract class FHIRSearchSetReturningRequestBuilder(onFhirClient: IOnFhirClient,
  * @param executionContext
  */
 class SearchSetIterator(rb: FHIRSearchSetReturningRequestBuilder)(implicit executionContext: ExecutionContext) extends Iterator[Future[FHIRSearchSetBundle]] {
-  var latestBundle: Option[FHIRSearchSetBundle] = None
+  @volatile var latestBundle: Option[FHIRSearchSetBundle] = None
 
   override def hasNext: Boolean = latestBundle.forall(_.hasNext())
 
   override def next(): Future[FHIRSearchSetBundle] = {
-    latestBundle match {
-      case None =>
-        val temp = rb.executeAndReturnBundle()
-        temp onComplete {
-          case Success(v) => latestBundle = Some(v)
-          case Failure(exception) =>
-        }
-        temp
-      case Some(b) =>
-        val temp = rb.onFhirClient.next(b)
-        temp onComplete {
-          case Success(v) => latestBundle = Some(v)
-          case Failure(exception) =>
-        }
-        temp
+    val page = latestBundle match {
+      case None => rb.executeAndReturnBundle()
+      case Some(b) => rb.onFhirClient.next(b)
+    }
+    //Record the page before completing the returned future so hasNext is
+    //correct as soon as the caller observes the result
+    page.map { bundle =>
+      latestBundle = Some(bundle)
+      bundle
     }
   }
 }

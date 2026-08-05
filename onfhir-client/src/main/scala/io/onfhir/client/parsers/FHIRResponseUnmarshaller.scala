@@ -1,13 +1,11 @@
 package io.onfhir.client.parsers
 
-import io.onfhir.api.client.FhirClientException
+import io.onfhir.api.client.{FhirClientException, OperationOutcomeParser}
 import io.onfhir.api.model._
-import io.onfhir.api.util.FHIRUtil
 import io.onfhir.api.{FHIR_CONTENT_TYPES, Resource}
 import io.onfhir.client.model.ClientHttpResponse
 import io.onfhir.util.DateTimeUtil
 import io.onfhir.util.JsonFormatter._
-import org.json4s.JsonAST.JObject
 
 import java.net.URI
 import java.nio.charset.{Charset, StandardCharsets}
@@ -26,7 +24,7 @@ object FHIRResponseUnmarshaller {
       xIntermediary = firstHeader(httpResponse, "X-Intermediary")
     )
     if (httpResponse.status.isFailure())
-      common.copy(outcomeIssues = responseBody.map(parseOperationOutcome).getOrElse(Nil))
+      common.copy(outcomeIssues = responseBody.map(OperationOutcomeParser.parseIssues).getOrElse(Nil))
     else common
   }
 
@@ -50,22 +48,6 @@ object FHIRResponseUnmarshaller {
       case EntityTagList(tags) => tags.headOption.map(_.value)
       case AnyEntityTag => None
     }
-
-  private def parseOperationOutcome(operationOutcome: JObject): Seq[OutcomeIssue] =
-    FHIRUtil.extractValueOption[Seq[JObject]](operationOutcome, "issue")
-      .getOrElse(Nil)
-      .map(parseOutcomeIssue)
-
-  private def parseOutcomeIssue(outcomeIssue: JObject): OutcomeIssue = OutcomeIssue(
-    severity = FHIRUtil.extractValue[String](outcomeIssue, "severity"),
-    code = FHIRUtil.extractValue[String](outcomeIssue, "code"),
-    details = FHIRUtil.extractValueOptionByPath[Seq[String]](outcomeIssue, "details.coding.code").getOrElse(Nil).headOption,
-    diagnostics = FHIRUtil.extractValueOption[String](outcomeIssue, "diagnostics")
-      .orElse(FHIRUtil.extractValueOptionByPath[String](outcomeIssue, "details.text")),
-    expression = FHIRUtil.extractValueOption[Seq[String]](outcomeIssue, "expression")
-      .orElse(FHIRUtil.extractValueOption[Seq[String]](outcomeIssue, "location"))
-      .getOrElse(Nil)
-  )
 
   private def firstHeader(response: ClientHttpResponse, name: String): Option[String] =
     response.headers.values(name).headOption

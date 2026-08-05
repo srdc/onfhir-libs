@@ -120,7 +120,7 @@ object FHIRRequestMarshaller {
       case FHIR_INTERACTIONS.HISTORY_TYPE =>
         appendSegments(basePath, fhirRequest.resourceType.get, "_history") -> getQuery(fhirRequest.queryParams).map(_.render)
       case FHIR_INTERACTIONS.HISTORY_SYSTEM => appendSegments(basePath, "_history") -> getQuery(fhirRequest.queryParams).map(_.render)
-      case FHIR_INTERACTIONS.CAPABILITIES => appendSegments(basePath, "metadata") -> None
+      case FHIR_INTERACTIONS.CAPABILITIES => appendSegments(basePath, "metadata") -> getQuery(fhirRequest.queryParams).map(_.render)
       case FHIR_INTERACTIONS.SEARCH =>
         val compartmentPath = fhirRequest.compartmentType match {
           case Some(compartmentType) => appendSegments(basePath, compartmentType, fhirRequest.compartmentId.get)

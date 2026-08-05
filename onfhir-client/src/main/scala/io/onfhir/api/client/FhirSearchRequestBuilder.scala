@@ -113,7 +113,7 @@ class FhirSearchRequestBuilder(onFhirClient: IOnFhirClient, rtype: String, count
   override protected def compile(): Unit = {
     super.compile()
     if (sortParams.nonEmpty)
-      request.queryParams = request.queryParams ++ Map("_sort" -> sortParams.map(sp => s"${if (sp._2) "-" else ""}${sp._1}").toList)
+      request.queryParams = request.queryParams ++ Map("_sort" -> List(sortParams.map(sp => s"${if (sp._2) "-" else ""}${sp._1}").mkString(",")))
     if (page.isDefined)
       request.queryParams = request.queryParams ++ Map(page.get._1 -> List(page.get._2))
     //Also add the compartment as param

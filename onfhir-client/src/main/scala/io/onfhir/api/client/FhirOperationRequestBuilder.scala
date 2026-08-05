@@ -114,6 +114,8 @@ class FhirOperationRequestBuilder(onFhirClient: IOnFhirClient, operation:String)
   def executeAndReturnOperationOutcome()(implicit executionContext: ExecutionContext):Future[FHIROperationResponse] = {
     execute()
       .map{
+          case error if error.isError =>
+            throw FhirClientException("Problem in FHIR operation!", Some(error))
           case response: FHIROperationResponse => response
           case oth =>
             try {

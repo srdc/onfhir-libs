@@ -1,10 +1,9 @@
 package io.onfhir.api.client
 
 import io.onfhir.api.Resource
-import io.onfhir.api.model.{FHIRResponse, HttpStatus, OrderedQuery, OutcomeIssue}
+import io.onfhir.api.model.{FHIRResponse, HttpStatus, OrderedQuery}
 import io.onfhir.api.util.FHIRUtil
 import io.onfhir.util.DateTimeUtil
-import io.onfhir.util.JsonFormatter.formats
 import org.json4s.JsonAST.{JArray, JObject}
 
 import java.net.URI
@@ -128,7 +127,8 @@ class FHIRHistoryBundle(bundle:Resource, override val request:FhirHistoryRequest
           parsedEntries
             .map(e => {
               val rid = e._2.method match {
-                case "CREATE" => FHIRUtil.extractIdFromResource(e._4.get)
+                //Create entries point at the type level url, so the id can only come from the contained resource
+                case "POST" | "CREATE" => FHIRUtil.extractIdFromResource(e._4.get)
                 case _ => e._2.url.split('/').last
               }
               rid -> e
@@ -230,7 +230,9 @@ class FHIRTransactionBatchBundle(val bundle:Resource) extends FHIRBundle(bundle)
 
     val outcomeIssues =
       if(statusCode.isFailure())
-        (rsp \ "outcome" \ "issue").extract[Seq[OutcomeIssue]]
+        FHIRUtil.extractValueOption[JObject](rsp, "outcome")
+          .map(OperationOutcomeParser.parseIssues)
+          .getOrElse(Nil)
       else Nil
 
     new FHIRResponse(
