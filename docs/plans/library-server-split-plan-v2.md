@@ -19,7 +19,8 @@ that:
 - Repofyr remains in this repository and can retain Akka and its existing
   license while that separate decision is pending;
 - existing `io.onfhir` group IDs, module artifact IDs, and Scala package roots
-  remain stable;
+  remain stable, except that the previously unpublished template-engine
+  artifact is corrected to `onfhir-template-engine_2.13` before release;
 - Repofyr and the libraries can build, version, and release independently;
 - consumers receive an explicit migration table for every module relocation
   and public-signature change.
@@ -41,6 +42,8 @@ reactor and `onfhir-server-r4` endpoint suite as a regression net.
 - `onfhir-validation`
 - `onfhir-template-engine`
 - `onfhir-r4`
+- `onfhir-definitions-r4` - added 2026-08-05; resources only, no Scala suffix
+- `onfhir-definitions-r5` - added 2026-08-05; resources only, no Scala suffix
 
 ### Server family - remains in Repofyr
 
@@ -55,7 +58,9 @@ reactor and `onfhir-server-r4` endpoint suite as a regression net.
 
 ### Non-goals
 
-- Renaming `io.onfhir` packages or existing module artifact IDs.
+- Renaming `io.onfhir` packages or existing module artifact IDs, except the
+  approved pre-release correction from `onfhir-template-engine` to
+  `onfhir-template-engine_2.13`.
 - Migrating the Repofyr server from Akka to Pekko.
 - Changing the Repofyr license.
 - Redesigning the Scala `Future` API merely because the HTTP transport changes.
@@ -70,7 +75,9 @@ reactor and `onfhir-server-r4` endpoint suite as a regression net.
 2. `onfhir-common` contains no routing, response marshalling, actor event bus,
    DB lifecycle, or server configuration singleton.
 3. Group ID `io.onfhir`, existing module artifact IDs, and `io.onfhir.*`
-   package roots do not change.
+   package roots do not change, except for the approved pre-release correction
+   from `onfhir-template-engine` to `onfhir-template-engine_2.13` so every
+   Scala library artifact carries its binary-version suffix.
 4. Every module relocation and public API change is recorded in the Migration
    Tables in the same phase that implements it.
 5. Library code is not relicensed until contributor and project-IP approval is
@@ -133,7 +140,7 @@ Configure Maven Enforcer in the new/shared library build configuration with
 - `org.apache.pekko:*`
 
 The rule applies transitively. The end-state build must also produce and check
-a resolved dependency tree for all nine library modules. Source cleanliness
+a resolved dependency tree for all eleven library modules. Source cleanliness
 without dependency cleanliness is a failure.
 
 ### Gate D - tests and compilation
@@ -207,6 +214,7 @@ longer empty; baseline commands are reproducible.
 | intended first library release | `4.0.0` |
 | Repofyr parent during split | `io.onfhir:fhir-repository_2.13` |
 | Repofyr library version property | `onfhir.libs.version` |
+| template-engine artifact | `io.onfhir:onfhir-template-engine_2.13` (approved pre-release suffix correction 2026-08-04) |
 | later Repofyr rebrand | separate post-split major migration to possible `io.repofyr` coordinates and packages |
 | transport-neutral HTTP contract | [ADR 0001](../adr/0001-neutral-http-contract.md) |
 | transitional event boundary | [ADR 0002](../adr/0002-transitional-onfhir-event-boundary.md) |
@@ -1044,8 +1052,9 @@ push a repository or publish artifacts without separate authorization.
 - Include the nine library module histories and the build/support files needed
   for a standalone reactor.
 - Create parent `io.onfhir:onfhir-libs-parent`.
-- Preserve every existing module artifact ID exactly, including the unsuffixed
-  `onfhir-template-engine` artifact.
+- Preserve every existing module artifact ID except for the approved
+  pre-release correction of `onfhir-template-engine` to
+  `onfhir-template-engine_2.13`, aligning it with the other Scala artifacts.
 - Add an optional `io.onfhir:onfhir-libs-bom` for consumers that use several
   modules.
 - After audit approval, set root `LICENSE` to Apache-2.0, add `NOTICE`, update
@@ -1073,7 +1082,9 @@ and signatures; Repofyr server-r4 tests pass against staged artifacts.
   directory was not filtered or replaced.
 - Created the `io.onfhir:onfhir-libs-parent:4.0.0` reactor with all nine
   reusable modules and the optional `io.onfhir:onfhir-libs-bom:4.0.0`.
-  Existing library artifact IDs and `io.onfhir.*` packages remain unchanged.
+  Existing library artifact IDs and `io.onfhir.*` packages remain unchanged
+  except for the approved pre-release correction to
+  `io.onfhir:onfhir-template-engine_2.13`.
 - Applied Apache-2.0 repository and POM metadata, added `NOTICE`, and packaged
   `META-INF/LICENSE` plus `META-INF/NOTICE` in every binary library JAR.
 - The standalone library reactor ran 98 tests with zero failures or errors.
@@ -1081,7 +1092,9 @@ and signatures; Repofyr server-r4 tests pass against staged artifacts.
   33 external dependencies passed the approved license gate.
 - An unsigned file-based staging rehearsal verified all 11 coordinates,
   flattened POMs, binary JARs, source JARs, Scaladoc/Javadoc JARs, and packaged
-  license files. No artifact was published externally.
+  license files. No artifact was published externally. That rehearsal
+  predates the template-engine suffix correction and must be repeated before
+  Phase 5A can complete.
 - Removed all nine library source modules from the Repofyr reactor, pinned
   `onfhir.libs.version` to `4.0.0`, and retained the GPL-3.0
   `io.onfhir:fhir-repository_2.13` server parent.
@@ -1091,13 +1104,35 @@ and signatures; Repofyr server-r4 tests pass against staged artifacts.
 - Signed staging remains pending. Maven's configured key `789EC152` is not
   present, and the only discovered local secret key is unusable for signing.
   A usable SRDC release key is required; no replacement key was generated.
+- Added the resources-only `io.onfhir:onfhir-definitions-r4:4.0.0` and
+  `io.onfhir:onfhir-definitions-r5:4.0.0` modules (2026-08-05), so the reactor
+  now builds eleven reusable modules plus the BOM, and the family publishes
+  thirteen coordinates rather than eleven. They package the HL7 FHIR 4.0.1 and
+  5.0.0 definitions ZIPs and base CapabilityStatements, copied byte-for-byte
+  from `onfhir-server-r4` and `onfhir-server-r5`; both are recorded in the
+  Section 7.3 migration table. Consequences for the remaining Phase 5A work:
+  the unsigned staging rehearsal must be repeated for the two new coordinates
+  as well as for the corrected template-engine suffix, and because neither
+  module has Scala sources their `release` profiles attach a marker sources JAR
+  and an empty javadoc JAR rather than the inherited resource-duplicating
+  sources JAR and no javadoc artifact at all.
+- Gave `onfhir-r4` its first tests (2026-08-05): five integration suites, 54
+  tests, that parse the real R4 AND R5 standard packages through
+  `BaseFhirConfigurator` and `R4Parser` and validate resources through
+  `FhirValidator`. The R5 suites pin the R4Parser-reuse contract the R5 server
+  configurator depends on, with a fixture mirroring `FhirR5Configurator`. All
+  of it consumes the definitions artifacts and `onfhir-config` in test scope
+  only, so no published dependency graph changed. Details, pinned package
+  counts, and recorded product/package findings are in
+  `docs/plans/onfhir-definitions-r4-integration-test-plan.md`.
 - Neither repository has been pushed, published, or committed for Phase 5A.
   Fresh-checkout verification follows the approved commits.
 
 ### Phase 5B - Repofyr Maven And Package Namespace Migration
 
 Start this only after Phase 5A is green. The reusable libraries retain the
-`io.onfhir` group, existing artifact IDs, and `io.onfhir.*` packages. Rename
+`io.onfhir` group, the Phase 5A-approved artifact IDs, and `io.onfhir.*`
+packages. Rename
 only server-owned Repofyr code and artifacts; this is not a global text
 replacement because Repofyr continues to import `io.onfhir` library APIs.
 
@@ -1218,6 +1253,11 @@ dependency; the class keeps its `io.onfhir.validation` package.
 | `FHIRUtil` status/date signatures using Akka `StatusCode` / `DateTime` | signatures using `HttpStatus` / `Instant` | 2B - implemented 2026-08-03 |
 | Path and query internals using Akka `Uri.Query` | `OrderedQuery`, preserving order, duplicates, encoding, and absent versus empty values | 2B - implemented 2026-08-03 |
 | `IFhirAuditCreator` Akka `StatusCode` contract | `HttpStatus` | 2B - implemented 2026-08-03 |
+| Missing FHIRPath N1 `convertsToBoolean`, `convertsToInteger`, `convertsToDate`, `convertsToDateTime`, `convertsToQuantity`, `convertsToString`, `toTime`, and `convertsToTime` functions | additive annotated functions in `FhirPathFunctionEvaluator`; targeted quantity conversion is same-unit only without general UCUM conversion | 5A - implemented 2026-08-04 |
+| Invalid numeric strings throwing from FHIRPath `toInteger`/`toDecimal`; Boolean `toString` values containing apostrophe delimiters | N1 behavior: invalid numeric strings return empty and Boolean strings contain `true`/`false` without embedded delimiters | 5A - implemented 2026-08-04 |
+| Missing FHIRPath N1 `toChars` function | additive annotated `FhirPathFunctionEvaluator.toChars`, splitting strings by Unicode code point | 5A - implemented 2026-08-04 |
+| Missing FHIRPath N1 `union(other)` and `timeOfDay()` functions; clock functions sampled independently | additive annotated functions plus one package-private lazy clock shared across one expression evaluation without changing the public `FhirPathEnvironment` constructor | 5A - implemented 2026-08-04 |
+| Low-level `FhirContentValidator` construction for resource validation | additive `FhirValidator(BaseFhirConfig, external terminology services, optional IExternalFhirReferenceResolver)` SDK facade with resource-type/profile selection, terminology composition, recursive resource validation, and library-owned contained/Bundle reference resolution | 5A - implemented 2026-08-04 |
 | `OnFhirNetworkClient(...)(implicit ActorSystem)` | constructor/factory with caller-owned implicit `ExecutionContext` | 3 - implemented 2026-08-03 |
 | `FhirClientUtil(...)(implicit ActorSystem)` | factory with caller-owned implicit `ExecutionContext` | 3 - implemented 2026-08-03 |
 | interceptor using Akka `HttpRequest` | interceptor using approved `ClientHttpRequest` | 3 - implemented 2026-08-03 |
@@ -1238,8 +1278,12 @@ dependency; the class keeps its `io.onfhir.validation` package.
 | Old contract | New contract | Phase |
 |---|---|---|
 | one parent `fhir-repository_2.13` for both families | Repofyr parent plus new `onfhir-libs-parent` | 5 |
+| `io.onfhir:onfhir-template-engine` | `io.onfhir:onfhir-template-engine_2.13` | 5A - approved pre-release correction 2026-08-04 |
+| reusable libraries exporting Logback as the SLF4J provider | modules declare only `slf4j-api`; consuming applications select and configure their provider | 5A - implemented 2026-08-04 |
 | all internal dependencies use `${project.version}` | library-family edges use `${onfhir.libs.version}`; server-family edges retain `${project.version}` | 4 - implemented 2026-08-03 |
 | one monorepo revision | independently versioned library and server releases | 5 |
+| each server repository embedding its own copy of the FHIR definitions ZIP and base CapabilityStatement | one resources-only artifact per FHIR release, first released in 4.0.0: `io.onfhir:onfhir-definitions-r4` packaging `definitions-r4.json.zip` plus `conformance-statement-r4.json`, and `io.onfhir:onfhir-definitions-r5` packaging `definitions-r5.json.zip` plus `conformance-statement-r5.json`, all at the default classpath locations. NO Scala binary-version suffix, because invariant 3's suffix rule applies to Scala artifacts and these contain no compiled code. Versions track the reactor; the FHIR package versions 4.0.1 and 5.0.0 are recorded in per-release `onfhir-definitions-r4.properties` / `onfhir-definitions-r5.properties`, whose names carry the release so both artifacts can share a classpath. Packaged HL7 content is CC0 1.0 and every resource is marked `-text` in `.gitattributes` so published bytes do not vary by build host | 5A - implemented 2026-08-05 |
+| `onfhir-r4` having no test dependencies and no test sources | test-scope `io.onfhir:onfhir-definitions-r4`, `io.onfhir:onfhir-definitions-r5` and `io.onfhir:onfhir-config_2.13`, plus test-scope specs2, carrying the repository's end-to-end R4 AND R5 standard-package integration suites (the R5 suites pin the `R4Parser` reuse contract of the R5 server configurator). None of these is a compile dependency, so the published `onfhir-r4` dependency graph is unchanged | 5A - implemented 2026-08-05 |
 
 ### 7.4 Server construction contracts
 
@@ -1279,11 +1323,13 @@ dependency; the class keeps its `io.onfhir.validation` package.
 
 The split is complete only when all of the following are true:
 
-- the nine library modules build from a fresh standalone checkout;
+- the eleven library modules build from a fresh standalone checkout;
 - their production sources, resources, and complete dependency graphs contain
   no Akka or Pekko;
-- the library artifacts have stable existing coordinates and an independent
-  parent/version;
+- the library artifacts have the approved coordinates, including
+  `io.onfhir:onfhir-template-engine_2.13` and the deliberately unsuffixed
+  resources-only `io.onfhir:onfhir-definitions-r4` and
+  `io.onfhir:onfhir-definitions-r5`, and an independent parent/version;
 - Apache-2.0 relicensing approval is recorded and published artifacts contain
   correct `LICENSE` and `NOTICE` metadata;
 - Repofyr retains its server modules, GPL metadata, and existing server parent;
