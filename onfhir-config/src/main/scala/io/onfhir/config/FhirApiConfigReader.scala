@@ -24,7 +24,7 @@ class FhirApiConfigReader(fhirVersion: String,
    * @param rtype Resource type of the foundation resource e.g. StructureDefinition, ValueSet, etc
    * @return
    */
-  def getInfrastructureResources(rtype: String): Seq[Resource] = {
+  override def getInfrastructureResources(rtype: String): Seq[Resource] = {
     val bundle = Await.result(fhirClient.search(rtype).executeAndMergeBundle(), 5 seconds)
     bundle.searchResults
   }
