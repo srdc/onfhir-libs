@@ -3,8 +3,16 @@ import io.onfhir.api.{FHIR_COMMON_FIELDS, Resource}
 import io.onfhir.api.util.FHIRUtil
 import io.onfhir.api.validation.{ValueSetDef, ValueSetRestrictions}
 import org.json4s.JsonAST.{JBool, JField, JObject, JString, JValue}
+import org.slf4j.{Logger, LoggerFactory}
 
 class TerminologyParser {
+  protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
+
+  /**
+   * ValueSet.compose.include.filter operators selecting a part of the CodeSystem concept hierarchy
+   * (see the FHIR filter-operator code system); all other operators filter on concept properties
+   */
+  private val hierarchyFilterOperators = Set("is-a", "descendent-of", "is-not-a", "generalizes")
 
 
   /**
@@ -37,13 +45,12 @@ class TerminologyParser {
   protected def parseCodeSystemAsValueSet(codeSystem:Resource, filters:Seq[(String, String, String)]):Option[Set[String]] = {
     //Extract defined properties
     val definedProperties = extractDefinedProperties(codeSystem)
-    //Find out if there is a hierarchy filter
-    val hierarchyFilter = filters.find(f => Set("is-a", "descendant-of", "generalizes").contains(f._2)).map(f => f._2 -> f._3)
+    //Separate the filters selecting a part of the concept hierarchy from the ones filtering on concept properties
+    val (hierarchyFilters, otherFilters) = filters.partition(f => hierarchyFilterOperators.contains(f._2))
+    //Only the first hierarchy filter is applied, and unsupported filter operators are ignored; report both as an ignored filter widens the resulting code set
+    reportIgnoredFilters(codeSystem, hierarchyFilters.drop(1) ++ otherFilters.filterNot(isSupportedPropertyFilter))
     //Found all concepts in the hierarchy conforming to hierarchy filter
-    val foundConceptsInHierarchy = filterConceptsAndRelated(hierarchyFilter, codeSystem, definedProperties).getOrElse(Nil)
-
-    //Other type of filters
-    val otherFilters = filters.filterNot(f => Set("is-a", "descendant-of", "generalizes").contains(f._2))
+    val foundConceptsInHierarchy = filterConceptsAndRelated(hierarchyFilters.headOption.map(f => f._2 -> f._3), codeSystem, definedProperties).getOrElse(Nil)
 
     foundConceptsInHierarchy
       .filter(c => isConceptActiveAndConformToFilters(c, otherFilters))
@@ -54,8 +61,34 @@ class TerminologyParser {
   }
 
   /**
+   * Check if a property filter operator is one of those applied by isConceptActiveAndConformToFilters
+   * @param filter  Filter as property, operator and value
+   * @return
+   */
+  protected def isSupportedPropertyFilter(filter:(String, String, String)):Boolean = filter._2 match {
+    case "=" | "in" | "not-in" | "regex" => true
+    case "exists" => filter._3 == "true" || filter._3 == "false"
+    case _ => false
+  }
+
+  /**
+   * Warn about the filters that are not applied while expanding a CodeSystem as ValueSet
+   * @param codeSystem      FHIR CodeSystem resource being expanded
+   * @param ignoredFilters  Filters that are not applied
+   */
+  protected def reportIgnoredFilters(codeSystem:Resource, ignoredFilters:Seq[(String, String, String)]):Unit = {
+    if(ignoredFilters.nonEmpty) {
+      val csUrl = FHIRUtil.extractValueOption[String](codeSystem, FHIR_COMMON_FIELDS.URL).getOrElse("<unknown>")
+      logger.warn(s"Ignoring the ValueSet filter(s) ${ignoredFilters.map(f => s"'${f._1} ${f._2} ${f._3}'").mkString(", ")} on CodeSystem $csUrl, " +
+        s"as the local terminology parser applies at most one hierarchy filter (${hierarchyFilterOperators.mkString(", ")}) " +
+        s"and the property filter operators =, in, not-in, exists, regex; the resulting code set may be wider than the ValueSet defines!")
+    }
+  }
+
+  /**
    * Parse and filter the concepts and related concepts in the hierachy a
-   * @param hiearchicalFilter   Hierarchical filter if exist
+   * @param hiearchicalFilter   Hierarchical filter (operator and searched code) if exist; the operator should be
+   *                            one of 'is-a', 'descendent-of', 'is-not-a' or 'generalizes'
    * @param parent              Parent object to search
    * @param definedProperties   Defined properties for the CodeSystem concepts
    * @return
@@ -109,6 +142,8 @@ class TerminologyParser {
                     //get the concept and parents
                     case "generalizes" =>
                       Some(getAndParseConcept(concept, definedProperties, isOnlyChildren = Some(false)))
+                    //Cannot happen; the operator is selected by 'hierarchyFilterOperators'
+                    case _ => None
                   }
                 else
                   hiearachyRelation match {
@@ -125,6 +160,8 @@ class TerminologyParser {
                         case None =>
                           None
                       }
+                    //Cannot happen; the operator is selected by 'hierarchyFilterOperators'
+                    case _ => None
                   }
             }
           }

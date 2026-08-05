@@ -185,9 +185,18 @@ configured terminology can express. The following gaps are known:
   is `compose.include` and `compose.exclude` entries listing explicit codes.
   Filter-based composition is expanded only when the referenced `CodeSystem`
   content is supplied alongside the `ValueSet`; hierarchy filters (`is-a`,
-  `generalizes`) and property filters are then applied to the supplied
-  concepts, and filter operators the parser does not recognize are ignored
-  rather than reported.
+  `descendent-of`, `is-not-a`, `generalizes`) and property filters (`=`, `in`,
+  `not-in`, `exists`, `regex`) are then applied to the supplied concepts. Only
+  the first hierarchy filter of an `include` is applied, and filter operators
+  outside the lists above, such as `child-of` or the invalid spelling
+  `descendant-of`, are ignored; both cases are logged as a warning while
+  parsing, and an ignored filter widens the resulting code set.
+- Hierarchy filters read the concept tree only from nested
+  `CodeSystem.concept.concept` elements, and their `filter.property` is not
+  checked; the filter value is always matched against `concept.code`. In a
+  flat `CodeSystem` that expresses hierarchy through a `parent` property,
+  `is-a` and `generalizes` therefore resolve to the named concept alone and
+  `descendent-of` yields no codes at all.
 - A `ValueSet` that yields no local codes, such as an intensional definition
   over an external system like SNOMED CT, is left out of
   `valueSetRestrictions`; validating such bindings needs an external
