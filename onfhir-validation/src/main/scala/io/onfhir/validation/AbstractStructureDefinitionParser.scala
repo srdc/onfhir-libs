@@ -126,8 +126,8 @@ abstract class AbstractStructureDefinitionParser(fhirComplexTypes: Set[String], 
     FHIRUtil.extractValueOption[String](constraintDef, "expression")
       .flatMap(expression =>
         expression match {
-          //This is not a FHIR path expression, but they use it for xhtml type
-          //TODO implement this as a function
+          //htmlChecks() is not a FHIRPath expression; XHTML invariants are skipped until
+          //an html-check function is provided (see docs/release/known-limitations.md)
           case "htmlChecks()" | "htmlchecks()" => None
           //Go on
           case _ => FHIRUtil.extractValue[String](constraintDef, "key") match {

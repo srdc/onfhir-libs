@@ -277,7 +277,9 @@ class TerminologyParser {
   protected def parseValueSet(valueSet:Resource, codeSystems:Map[String, Map[String, Resource]]):Option[ValueSetRestrictions] ={
     val included = getValueSetDef(valueSet, codeSystems, isIncluded = true)
     val excluded = getValueSetDef(valueSet, codeSystems, isIncluded = false)
-    //If there is no direct code, do not put it (TODO handle filters; intensionally defined value sets)
+    //A ValueSet yielding no locally resolvable codes (e.g. an intensional definition over
+    //a code system whose content is not supplied) is omitted; such bindings are left to
+    //external terminology services (see the README Limitations section)
     if(included.isEmpty)
       None
     else

@@ -22,7 +22,7 @@ import scala.util.matching.Regex
 
 
 /**
- * HIR complex data type and resource validator
+ * FHIR complex data type and resource validator
  * @param fhirConfig          FHIR configurations
  * @param profileUrl          URL of the leaf profile that content is validated against
  * @param referenceResolver   Resolver class for the FHIR references
@@ -649,8 +649,11 @@ class FhirContentValidator(
           }
       //Otherwise
       case m =>
-        var matcherPath = m._1.replaceAll("\\[x\\]", "") //remove
-        //TODO Better handle this part
+        var matcherPath = m._1.replaceAll("\\[x\\]", "") //remove choice type suffix
+        //Strip slice-name segments (e.g. component:alpha.code) so the discriminator path
+        //evaluates against raw content; extension(...) paths keep their form. Other
+        //function-style discriminator paths are not normalized (see
+        //docs/release/known-limitations.md).
         if (!matcherPath.contains("extension(") && matcherPath.contains(":"))
           matcherPath =
             matcherPath
@@ -1589,9 +1592,10 @@ object FhirContentValidator {
     ptype match {
       case FHIR_DATA_TYPES.STRING => checkIfNonEmptyString(value)
       case FHIR_DATA_TYPES.INTEGER => value.isInstanceOf[JInt]
-      case FHIR_DATA_TYPES.URI => checkIfNonEmptyString(value)//Try(new URI(value.extract[String])).isSuccess
+      //uri/url checks are deliberately lenient: FHIR's own definitions do not conform
+      //to strict URI syntax (see the README Limitations section)
+      case FHIR_DATA_TYPES.URI => checkIfNonEmptyString(value)
       case FHIR_DATA_TYPES.URL =>  checkIfNonEmptyString(value)
-        //Try(new URL(value.extract[String])).isSuccess //TODO even FHIR does not conform to this in its StructureDefinition
       case FHIR_DATA_TYPES.CANONICAL => value.extract[String].split('|') match {
         case Array(url) => Try(new URI(url)).isSuccess
         case Array(url, version) =>
@@ -1614,7 +1618,7 @@ object FhirContentValidator {
       case FHIR_DATA_TYPES.POSITIVEINT => value.isInstanceOf[JInt] && value.extract[Int].intValue() >= 1 //"""+?[1-9][0-9]*$""".r.findFirstMatchIn(value).isDefined
       case FHIR_DATA_TYPES.BASE64BINARY => true
       case FHIR_DATA_TYPES.MARKDOWN => checkIfNonEmptyString(value)
-      case FHIR_DATA_TYPES.XHTML => true //TODO Check FHIR XHTML restrictions
+      case FHIR_DATA_TYPES.XHTML => true //XHTML content is not validated (see README Limitations and docs/release/known-limitations.md)
       case _ => true
     }
   }
