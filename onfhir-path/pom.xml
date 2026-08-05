@@ -106,6 +106,10 @@
             <artifactId>scala-library</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-reflect</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.onfhir</groupId>
             <artifactId>onfhir-common_${scala.binary.version}</artifactId>
             <version>${onfhir.libs.version}</version>
