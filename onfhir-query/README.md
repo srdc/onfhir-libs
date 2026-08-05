@@ -282,16 +282,28 @@ Search conformance.
 | `quantity` | Quantity-family and SampledData targets, including system/code or unit matching |
 | `reference` | Relative/absolute references, `:identifier`, `:type`, `:not`, and canonical matching |
 | `uri` | Exact, `:above`, `:below`, and `:not` matching |
-| `composite` | Component evaluation using the component search-parameter configurations |
+| `composite` | Each component evaluated through its own component search-parameter configuration, all components required to match within the same base context element |
 
 The common `:missing` modifier is handled through the public facade. Token
 terminology modifiers such as `:in`, `:not-in`, `:above`, and `:below` are not
 implemented for general terminology expansion and may fail explicitly.
 
 Search definitions must align `paths`, `targetTypes`, and `restrictions` by
-index. Path restrictions are applied while extracting values. The evaluator
-does not resolve remote references, call terminology services, convert UCUM
-units, or inspect other resources in a repository.
+index. For a composite parameter those paths describe the base context of the
+composite's own expression, not the component elements: the component element
+paths are taken from the configurations named in `targets`, and the `$`
+separated parts of the search statement bind to those components in order.
+
+A component configuration's paths are absolute from the resource root, so a
+composite is evaluated only where its base context is the resource itself (an
+empty path), which covers parameters such as Observation `code-value-quantity`.
+Where the base context is a nested element — Observation `component`, the
+`context-type-value` family's `useContext`, or the MolecularSequence coordinate
+composites' `referenceSeq` — the component paths do not resolve inside that
+element and the criterion does not match. Path restrictions are applied while
+extracting values. The evaluator does not resolve remote references, call
+terminology services, convert UCUM units, or inspect other resources in a
+repository.
 
 ## Error behavior
 

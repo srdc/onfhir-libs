@@ -16,6 +16,9 @@ import scala.concurrent.{Await, Future}
 class CompiledFhirQueryTest extends Specification {
   sequential
 
+  /** Target type SearchParameterConfigurator emits for a composite's base context. */
+  private val COMPOSITE_BASE_TARGET_TYPE = "Resource"
+
   private val config = new FhirServerConfig("R4")
   config.FHIR_RESULT_PARAMETERS = Seq(
     FHIR_SEARCH_RESULT_PARAMETERS.SORT,
@@ -37,11 +40,28 @@ class CompiledFhirQueryTest extends Specification {
       searchParameter("code", FHIR_PARAMETER_TYPES.TOKEN, Seq("code"), Seq(FHIR_DATA_TYPES.CODEABLE_CONCEPT)),
       searchParameter("combo-value-concept", FHIR_PARAMETER_TYPES.TOKEN, Seq("valueCodeableConcept"), Seq(FHIR_DATA_TYPES.CODEABLE_CONCEPT)),
       searchParameter(
+        "value-quantity",
+        FHIR_PARAMETER_TYPES.QUANTITY,
+        Seq("valueQuantity", "valueSampledData"),
+        Seq(FHIR_DATA_TYPES.QUANTITY, FHIR_DATA_TYPES.SAMPLED_DATA)
+      ),
+      //A composite's own paths are the base context of its expression, and its
+      //components are named in targets; the component element paths come from the
+      //component configurations. This mirrors what SearchParameterConfigurator
+      //produces for the R4 Observation composites.
+      searchParameter(
         "code-value-concept",
         FHIR_PARAMETER_TYPES.COMPOSITE,
-        Seq("code", "valueCodeableConcept"),
-        Seq(FHIR_DATA_TYPES.CODEABLE_CONCEPT, FHIR_DATA_TYPES.CODEABLE_CONCEPT),
+        Seq(""),
+        Seq(COMPOSITE_BASE_TARGET_TYPE),
         targets = Seq("code", "combo-value-concept")
+      ),
+      searchParameter(
+        "code-value-quantity",
+        FHIR_PARAMETER_TYPES.COMPOSITE,
+        Seq(""),
+        Seq(COMPOSITE_BASE_TARGET_TYPE),
+        targets = Seq("code", "value-quantity")
       )
     ).map(parameter => parameter.pname -> parameter).toMap
   )
@@ -95,6 +115,15 @@ class CompiledFhirQueryTest extends Specification {
       |  "id": "obs1",
       |  "code": {"coding": [{"system": "http://loinc.org", "code": "85354-9"}]},
       |  "valueCodeableConcept": {"coding": [{"system": "http://snomed.info/sct", "code": "260385009"}]}
+      |}""".stripMargin
+  )
+
+  private val quantityObservation: JValue = parse(
+    """{
+      |  "resourceType": "Observation",
+      |  "id": "obs2",
+      |  "code": {"coding": [{"system": "http://loinc.org", "code": "85354-9"}]},
+      |  "valueQuantity": {"value": 5.5, "system": "http://unitsofmeasure.org", "code": "mg"}
       |}""".stripMargin
   )
 
@@ -164,6 +193,23 @@ class CompiledFhirQueryTest extends Specification {
 
       evaluator.compile(matching).matches(observation) must beTrue
       evaluator.compile(nonMatching).matches(observation) must beFalse
+    }
+
+    "bind each composite component to its own element" in {
+      //Same two codes as the matching case, given in the wrong component order
+      val swapped = "Observation?code-value-concept=http://snomed.info/sct%7C260385009$http://loinc.org%7C85354-9"
+
+      evaluator.compile(swapped).matches(observation) must beFalse
+    }
+
+    "evaluate a composite whose components have different search types" in {
+      val matching = "Observation?code-value-quantity=http://loinc.org%7C85354-9$5.5%7Chttp://unitsofmeasure.org%7Cmg"
+      val wrongQuantity = "Observation?code-value-quantity=http://loinc.org%7C85354-9$9.9%7Chttp://unitsofmeasure.org%7Cmg"
+      val wrongCode = "Observation?code-value-quantity=http://loinc.org%7C999$5.5%7Chttp://unitsofmeasure.org%7Cmg"
+
+      evaluator.compile(matching).matches(quantityObservation) must beTrue
+      evaluator.compile(wrongQuantity).matches(quantityObservation) must beFalse
+      evaluator.compile(wrongCode).matches(quantityObservation) must beFalse
     }
 
     "ignore result parameters without affecting the predicate" in {

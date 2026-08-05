@@ -47,9 +47,16 @@ object ImMemorySearchUtil {
 
   /**
    * Handle composite search parameter, check if search statement on parameter is satisfied or not
+   *
+   * A composite parameter configuration describes the base context its own expression points to
+   * (e.g. for Observation.code-value-quantity a single empty path, meaning the resource itself);
+   * the element paths of the components live in the component parameter configurations. Therefore
+   * each component is evaluated against the values extracted with its own configuration, and all
+   * components have to be satisfied within the same base context element.
+   *
    * @param parameter               Search statement on parameter
    * @param sp                      Search Parameter configuration
-   * @param values                  Values to be evaluated
+   * @param values                  Base context elements to be evaluated
    * @param validSearchParamConfs   All search parameter configurations
    * @return
    */
@@ -76,8 +83,14 @@ object ImMemorySearchUtil {
                   Parameter(FHIR_PARAMETER_CATEGORIES.NORMAL, spc._2.get.ptype, spc._1, FHIRSearchParameterValueParser.parseSimpleValue(v, spc._2.get.ptype))
             }
 
-        childParamsConstructed.forall(p =>
-          handleSimpleParameter(p._2, p._1, values, endpointSettings)
+        //Base context elements the composite's expression points to
+        val baseElements = values.flatMap(_._1)
+
+        //All components should be satisfied within the same base context element
+        baseElements.exists(baseElement =>
+          childParamsConstructed.forall(p =>
+            handleSimpleParameter(p._2, p._1, extractValuesAndTargetTypes(p._1, baseElement), endpointSettings)
+          )
         )
     }
     result
@@ -483,6 +496,9 @@ object ImMemorySearchUtil {
                 InMemoryPrefixModifierHandler.rangePrefixHandler(value, prefix, parentElement, isSampleData = true) &&
                   InMemoryPrefixModifierHandler
                     .handleQuantityCodeSystemQuery(system, code, s"${FHIR_COMMON_FIELDS.ORIGIN}.${FHIR_COMMON_FIELDS.SYSTEM}", s"${FHIR_COMMON_FIELDS.ORIGIN}.${FHIR_COMMON_FIELDS.CODE}",s"${FHIR_COMMON_FIELDS.ORIGIN}.${FHIR_COMMON_FIELDS.UNIT}", parentElement)
+
+              case other =>
+                throw new IllegalStateException(s"Unknown target element type $other !!!")
             }
       ))
   }
