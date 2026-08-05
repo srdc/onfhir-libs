@@ -1080,14 +1080,61 @@ explains why they live in this module), `onfhir-definitions-r5/README.md`
 suites), split-plan Section 7.3 onfhir-r4 test-dependency row and the Phase 5A
 test bullet (five suites, 54 tests).
 
+### Follow-on - dedicated onfhir-r5 parser module (executed 2026-08-05, owner-requested)
+
+The owner subsequently chose a clearer release boundary: R5 consumers should
+depend on an R5-named parser module even while its implementation remains
+compatible with R4. The reactor now includes `io.onfhir:onfhir-r5_2.13`, whose
+`R5Parser` extends `R4Parser`, supplies R5 5.0.0 default primitive and complex
+type sets, and is the public override point for future R5 differences.
+
+The defaults were prepared from the official HL7 R5 datatype page and checked
+against the non-abstract types in the packaged 5.0.0 `profiles-types.json`.
+The resulting universes are 21 primitive types (the 20 ordinary primitives
+plus special-purpose `xhtml`) and 42 distinct complex types. Quantity aliases
+normalize to `Quantity`, while reusable `MarketingStatus` and
+`ProductShelfLife` structures are included from the official type bundle.
+
+The three R5 test files moved without behavior changes from package
+`io.onfhir.r4` to `io.onfhir.r5`; the fixture and direct SearchParameter test
+now instantiate `R5Parser`. One assertion was added to pin both parser default
+sets exactly to the definition-derived configuration. The module split is now:
+
+| Module | Suites | Tests |
+| --- | ---: | ---: |
+| `onfhir-r4` | 3 | 34 |
+| `onfhir-r5` | 2 | 21 |
+
+`onfhir-r4` no longer has a test dependency on `onfhir-definitions-r5`.
+`onfhir-r5` has a compile dependency on `onfhir-r4` for implementation reuse,
+while `onfhir-definitions-r5`, `onfhir-config`, and specs2 remain test-only.
+The new coordinate was added to the reactor, BOM, forbidden-import and license
+gates, MiMa new-artifact list, and staged-release inventory.
+
+Verification for this follow-on:
+
+- focused R5 reactor run: 21 tests, zero failures or errors;
+- full tests-skipped artifact build: BUILD SUCCESS for all 14 reactor projects;
+- packaged `onfhir-r5_2.13-4.0.0.jar` contains `R5Parser` plus
+  `META-INF/LICENSE` and `META-INF/NOTICE`;
+- forbidden-import gate: PASS, zero Akka/Pekko findings in all ten Scala
+  libraries;
+- dependency-license gate: PASS, 32 external dependencies reviewed;
+- the full `mvn test` gate reaches an unrelated owner-edited temporary `DUMP`
+  assertion in `R4SearchParameterConfiguratorTest` and therefore is not green
+  in this working tree. MiMa likewise reports only concurrent
+  `FHIRSearchParameter.components` API changes outside this follow-on; the new
+  R5 artifact is correctly classified as having no 3.3 baseline.
+
 ### Status
 
-COMPLETE. Phases 0 through 5 are done, the owner-requested R5 artifact is
-delivered, and all five Phase 5 gates are green.
-Everything this plan set out to deliver is in place and verified. Nothing was
-staged, committed or pushed by this work; the tree is left for owner review.
+COMPLETE for the requested definitions and parser artifacts. The dedicated R5
+follow-on is focused-test and artifact verified; the workspace-wide test and
+MiMa gates await resolution of the concurrent changes recorded immediately
+above. Nothing was staged, committed, published, or pushed by this work; the
+tree is left for owner review.
 
-Open items for the owner, none of them blocking:
+Additional historical open items for the owner:
 
 1. Two recorded product defects, pinned by tests rather than fixed: the numeric
    `BaseFhirConfig.fhirVersion` is never populated, and `CodeBindingRestriction`

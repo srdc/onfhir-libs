@@ -30,9 +30,10 @@ $artifacts = [ordered]@{
     "onfhir-definitions-r4" = "onfhir-definitions-r4"
     "onfhir-definitions-r5" = "onfhir-definitions-r5"
     "onfhir-r4" = "onfhir-r4_2.13"
+    "onfhir-r5" = "onfhir-r5_2.13"
 }
 $newArtifacts = @("onfhir-query_2.13", "onfhir-template-engine_2.13",
-    "onfhir-definitions-r4", "onfhir-definitions-r5")
+    "onfhir-definitions-r4", "onfhir-definitions-r5", "onfhir-r5_2.13")
 
 $modules = ($artifacts.Keys -join ",")
 Push-Location $repoRoot
@@ -115,6 +116,8 @@ $expectedNormalized = ($expected -replace "`r`n", "`n").TrimEnd()
 $reportNormalized = ($report -replace "`r`n", "`n").TrimEnd()
 if ($reportNormalized -ne $expectedNormalized) {
     Write-Output "MiMa report differs from the accepted baseline."
+    Compare-Object ($expectedNormalized -split "`n") ($reportNormalized -split "`n") |
+        ForEach-Object { Write-Output ("  {0} {1}" -f $_.SideIndicator, $_.InputObject) }
     Write-Output "Run with -UpdateBaseline only after reconciling changes with the migration table."
     exit 1
 }

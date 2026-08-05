@@ -1,8 +1,8 @@
-package io.onfhir.r4
+package io.onfhir.r5
 
 import io.onfhir.api.validation.{ConstraintKeys, ElementRestrictions, ProfileRestrictions}
 import io.onfhir.config.{FHIRSearchParameter, FhirServerConfig, SearchParameterConfigurator}
-import io.onfhir.r4.parsers.R4Parser
+import io.onfhir.r5.parsers.R5Parser
 import io.onfhir.validation.{CardinalityMinRestriction, CodeBindingRestriction, ConstraintsRestriction, ReferenceRestrictions, TypeRestriction}
 import org.junit.runner.RunWith
 import org.specs2.mutable.Specification
@@ -10,14 +10,8 @@ import org.specs2.runner.JUnitRunner
 
 /**
  * Integration suite: parse the real FHIR R5 5.0.0 standard definitions package
- * with the SAME parsers this module ships for R4.
- *
- * This suite exists because the onFHIR R5 server configurator
- * (Repofyr's `FhirR5Configurator`) reuses [[R4Parser]] for foundation
- * resources; see the "R5 foundation-resource compatibility" section of this
- * module's README. Nothing else in onfhir-libs pins that reuse contract, so a
- * change to `R4Parser` or `StructureDefinitionParser` that silently broke R5
- * package parsing would otherwise go unnoticed.
+ * with [[R5Parser]], which currently inherits the compatible implementation
+ * from R4 while owning R5 defaults and future R5-specific behavior.
  *
  * Counts are pinned to FHIR 5.0.0 as packaged by `onfhir-definitions-r5`,
  * for the same reason the R4 suite pins its counts: the artifact is
@@ -36,6 +30,11 @@ class R5StandardPackageParsingTest extends Specification {
     profile.elementRestrictions.find(_._1 == path).map(_._2)
 
   "The parsed R5 standard package" should {
+
+    "match the R5 parser defaults to the official definition package" in {
+      R5Parser.DefaultPrimitiveTypes mustEqual fhirConfig.FHIR_PRIMITIVE_TYPES
+      R5Parser.DefaultComplexTypes mustEqual fhirConfig.FHIR_COMPLEX_TYPES
+    }
 
     "derive the R5 type universes, including the types new in R5" in {
       fhirConfig.FHIR_RESOURCE_TYPES must contain(allOf("Patient", "Observation", "Bundle",
@@ -156,7 +155,7 @@ class R5StandardPackageParsingTest extends Specification {
     }
   }
 
-  "The base R5 CapabilityStatement parsed with the R4 parser" should {
+  "The base R5 CapabilityStatement parsed with the R5 parser" should {
 
     "yield a plausible FHIRCapabilityStatement" in {
       capabilityStatement.fhirVersion mustEqual "5.0.0"
@@ -184,9 +183,9 @@ class R5StandardPackageParsingTest extends Specification {
     }
   }
 
-  "The R5 SearchParameter bundle parsed with the R4 parser" should {
+  "The R5 SearchParameter bundle parsed with the R5 parser" should {
 
-    lazy val parser = new R4Parser(fhirConfig.FHIR_COMPLEX_TYPES, fhirConfig.FHIR_PRIMITIVE_TYPES)
+    lazy val parser = new R5Parser(fhirConfig.FHIR_COMPLEX_TYPES, fhirConfig.FHIR_PRIMITIVE_TYPES)
 
     lazy val allSearchParameters: Seq[FHIRSearchParameter] =
       configReader
@@ -215,7 +214,7 @@ class R5StandardPackageParsingTest extends Specification {
       allSearchParameters must haveSize(1239)
       allSearchParameters.map(_.ptype).toSet mustEqual Set(
         "composite", "date", "number", "quantity", "reference", "special", "string", "token", "uri")
-      // R5 removed SearchParameter.xpath; the R4 parser reads it as optional,
+      // R5 removed SearchParameter.xpath; the shared implementation reads it as optional,
       // so every parsed definition simply carries None.
       allSearchParameters.forall(_.xpath.isEmpty) must beTrue
     }

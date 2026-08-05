@@ -10,7 +10,7 @@
 
 ## 1. Goal
 
-Separate the nine reusable onFHIR library modules from the Repofyr server so
+Separate the reusable onFHIR library modules from the Repofyr server so
 that:
 
 - the library family can be released under Apache-2.0 after the contributor
@@ -42,6 +42,7 @@ reactor and `onfhir-server-r4` endpoint suite as a regression net.
 - `onfhir-validation`
 - `onfhir-template-engine`
 - `onfhir-r4`
+- `onfhir-r5` - added 2026-08-05; R5 parser facade and compatibility tests
 - `onfhir-definitions-r4` - added 2026-08-05; resources only, no Scala suffix
 - `onfhir-definitions-r5` - added 2026-08-05; resources only, no Scala suffix
 
@@ -140,7 +141,7 @@ Configure Maven Enforcer in the new/shared library build configuration with
 - `org.apache.pekko:*`
 
 The rule applies transitively. The end-state build must also produce and check
-a resolved dependency tree for all eleven library modules. Source cleanliness
+a resolved dependency tree for all twelve library modules. Source cleanliness
 without dependency cleanliness is a failure.
 
 ### Gate D - tests and compilation
@@ -391,7 +392,7 @@ singleton until Phase 1D moves the whole server cluster.
 the known server-only files scheduled to move in Phase 1D:
 
 ```powershell
-rg -n "OnfhirConfig" onfhir-common onfhir-client onfhir-path onfhir-query onfhir-config onfhir-expression onfhir-validation onfhir-template-engine onfhir-r4
+rg -n "OnfhirConfig" onfhir-common onfhir-client onfhir-path onfhir-query onfhir-config onfhir-expression onfhir-validation onfhir-template-engine onfhir-r4 onfhir-r5
 ```
 
 The only permitted matches at this point are:
@@ -1106,24 +1107,24 @@ and signatures; Repofyr server-r4 tests pass against staged artifacts.
   A usable SRDC release key is required; no replacement key was generated.
 - Added the resources-only `io.onfhir:onfhir-definitions-r4:4.0.0` and
   `io.onfhir:onfhir-definitions-r5:4.0.0` modules (2026-08-05), so the reactor
-  now builds eleven reusable modules plus the BOM, and the family publishes
-  thirteen coordinates rather than eleven. They package the HL7 FHIR 4.0.1 and
+  now builds twelve reusable modules plus the BOM, and the family publishes
+  fourteen coordinates rather than eleven. They package the HL7 FHIR 4.0.1 and
   5.0.0 definitions ZIPs and base CapabilityStatements, copied byte-for-byte
   from `onfhir-server-r4` and `onfhir-server-r5`; both are recorded in the
   Section 7.3 migration table. Consequences for the remaining Phase 5A work:
-  the unsigned staging rehearsal must be repeated for the two new coordinates
-  as well as for the corrected template-engine suffix, and because neither
-  module has Scala sources their `release` profiles attach a marker sources JAR
-  and an empty javadoc JAR rather than the inherited resource-duplicating
-  sources JAR and no javadoc artifact at all.
-- Gave `onfhir-r4` its first tests (2026-08-05): five integration suites, 54
-  tests, that parse the real R4 AND R5 standard packages through
-  `BaseFhirConfigurator` and `R4Parser` and validate resources through
-  `FhirValidator`. The R5 suites pin the R4Parser-reuse contract the R5 server
-  configurator depends on, with a fixture mirroring `FhirR5Configurator`. All
-  of it consumes the definitions artifacts and `onfhir-config` in test scope
-  only, so no published dependency graph changed. Details, pinned package
-  counts, and recorded product/package findings are in
+  the unsigned staging rehearsal must be repeated for the three new coordinates
+  as well as for the corrected template-engine suffix. Because neither
+  definitions module has Scala sources, their `release` profiles attach a
+  marker sources JAR and an empty javadoc JAR rather than the inherited
+  resource-duplicating sources JAR and no javadoc artifact at all.
+- Gave `onfhir-r4` three R4 integration suites and introduced `onfhir-r5` with
+  two R5 integration suites (2026-08-05). The new `R5Parser` extends
+  `R4Parser`, owns the official R5 datatype defaults, and provides the public
+  R5 extension point. The suites parse the real R4 and R5 standard packages
+  through `BaseFhirConfigurator` and validate resources through
+  `FhirValidator`; definition artifacts and `onfhir-config` remain test-scope
+  only. Details, pinned package counts, and recorded product/package findings
+  are in
   `docs/plans/onfhir-definitions-r4-integration-test-plan.md`.
 - Neither repository has been pushed, published, or committed for Phase 5A.
   Fresh-checkout verification follows the approved commits.
@@ -1283,7 +1284,7 @@ dependency; the class keeps its `io.onfhir.validation` package.
 | all internal dependencies use `${project.version}` | library-family edges use `${onfhir.libs.version}`; server-family edges retain `${project.version}` | 4 - implemented 2026-08-03 |
 | one monorepo revision | independently versioned library and server releases | 5 |
 | each server repository embedding its own copy of the FHIR definitions ZIP and base CapabilityStatement | one resources-only artifact per FHIR release, first released in 4.0.0: `io.onfhir:onfhir-definitions-r4` packaging `definitions-r4.json.zip` plus `conformance-statement-r4.json`, and `io.onfhir:onfhir-definitions-r5` packaging `definitions-r5.json.zip` plus `conformance-statement-r5.json`, all at the default classpath locations. NO Scala binary-version suffix, because invariant 3's suffix rule applies to Scala artifacts and these contain no compiled code. Versions track the reactor; the FHIR package versions 4.0.1 and 5.0.0 are recorded in per-release `onfhir-definitions-r4.properties` / `onfhir-definitions-r5.properties`, whose names carry the release so both artifacts can share a classpath. Packaged HL7 content is CC0 1.0 and every resource is marked `-text` in `.gitattributes` so published bytes do not vary by build host | 5A - implemented 2026-08-05 |
-| `onfhir-r4` having no test dependencies and no test sources | test-scope `io.onfhir:onfhir-definitions-r4`, `io.onfhir:onfhir-definitions-r5` and `io.onfhir:onfhir-config_2.13`, plus test-scope specs2, carrying the repository's end-to-end R4 AND R5 standard-package integration suites (the R5 suites pin the `R4Parser` reuse contract of the R5 server configurator). None of these is a compile dependency, so the published `onfhir-r4` dependency graph is unchanged | 5A - implemented 2026-08-05 |
+| R5 consumers directly constructing `R4Parser`; R4 and R5 suites co-located in `onfhir-r4` | new `io.onfhir:onfhir-r5_2.13` with `R5Parser extends R4Parser`, R5 5.0.0 primitive/complex defaults, and the relocated R5 standard-package suites. `onfhir-r4` now tests only R4 and no longer test-depends on `onfhir-definitions-r5`; `onfhir-r5` compile-depends on `onfhir-r4` and keeps definitions/config dependencies test-only | 5A - implemented 2026-08-05 |
 
 ### 7.4 Server construction contracts
 
@@ -1323,7 +1324,7 @@ dependency; the class keeps its `io.onfhir.validation` package.
 
 The split is complete only when all of the following are true:
 
-- the eleven library modules build from a fresh standalone checkout;
+- the twelve library modules build from a fresh standalone checkout;
 - their production sources, resources, and complete dependency graphs contain
   no Akka or Pekko;
 - the library artifacts have the approved coordinates, including

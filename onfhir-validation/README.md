@@ -8,9 +8,9 @@ FHIRPath invariants, profile inheritance, and slicing.
 It is deliberately FHIR-release neutral. It does not contain a standard FHIR
 definitions package, parse a particular release's `StructureDefinition`
 format, download packages, persist content, or translate validation results
-into HTTP responses. Use a release-specific companion such as `onfhir-r4` to
-parse foundation resources, then provide the resulting configuration to this
-module.
+into HTTP responses. Use a release-specific companion such as `onfhir-r4` or
+`onfhir-r5` to parse foundation resources, then provide the resulting
+configuration to this module.
 
 ## Dependency
 
@@ -23,8 +23,8 @@ module.
 ```
 
 The module depends on `onfhir-common` and `onfhir-path`. Applications that
-parse R4 definitions also need the matching `onfhir-r4` dependency; that is a
-consumer concern, not a dependency of this module.
+parse standard definitions also need the matching `onfhir-r4` or `onfhir-r5`
+dependency; that is a consumer concern, not a dependency of this module.
 
 ## Configuration prerequisites
 

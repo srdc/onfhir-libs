@@ -5,8 +5,8 @@ libraries repository.
 
 ## Repository boundary
 
-This repository owns nine reusable Scala libraries - common, client, path,
-query, config, expression, validation, template engine, and R4 - plus two
+This repository owns ten reusable Scala libraries - common, client, path,
+query, config, expression, validation, template engine, R4, and R5 - plus two
 resources-only artifacts, `onfhir-definitions-r4` and `onfhir-definitions-r5`,
 that package the HL7 FHIR R4 and R5 standard definitions. Server runtime code
 belongs in the Repofyr repository.

@@ -79,21 +79,17 @@ Applications that need the v2/v3 code systems for R5 terminology validation
 must supply them separately, for example through `FSConfigReader`'s
 `codeSystemsPath`.
 
-## No R5 parser in this repository
+## R5 parser companion
 
-onfhir-libs contains no R5 foundation-resource parser. `onfhir-r4`'s `R4Parser`
-is what the onFHIR R5 server configurator currently reuses, because the
-infrastructure-resource shapes onFHIR reads are compatible where it matters;
-see the "R5 foundation-resource compatibility" section of
-[`onfhir-r4`](../onfhir-r4/README.md). That reuse is a deliberate configuration
-decision by the consumer, not a promise made by this artifact.
+[`onfhir-r5`](../onfhir-r5/README.md) supplies the release-specific `R5Parser`.
+It currently extends `R4Parser` because the infrastructure-resource shapes
+onFHIR consumes remain compatible, while owning the R5 default datatype sets
+and the extension point for future R5 differences.
 
-That reuse contract IS pinned by tests: `onfhir-r4`'s
-`R5StandardPackageParsingTest` and `R5StandardValidationTest` consume this
-artifact in test scope and parse/validate against the full 5.0.0 package with
-the R4 parsers, using a fixture that mirrors the server's `FhirR5Configurator`
-(including the `VALUESET_AND_CODESYSTEM_BUNDLE_FILES` narrowing shown above).
-The suites live in `onfhir-r4` because that is where the reused parser lives.
+`onfhir-r5` consumes this definitions artifact in test scope. Its
+`R5StandardPackageParsingTest` and `R5StandardValidationTest` parse and validate
+against the full 5.0.0 package, including the terminology-bundle narrowing
+shown above. This artifact itself remains parser-neutral and resources-only.
 
 ## Usage
 

@@ -44,38 +44,20 @@ capability defaults. Applications can instead supply explicit type sets and
 `FhirCapabilityDefaults` when initializing configuration from a particular
 definition package.
 
-## R5 foundation-resource compatibility
-
-The R5 server configurator currently reuses `R4Parser` for its foundation
-resource configuration. The R4 parser covers the infrastructure-resource
-fields that onFHIR currently uses for R5 configuration, where those resource
-shapes and semantics remain compatible.
-
-This does not make `onfhir-r4` a general-purpose R5 parser, nor does it imply
-that every R5 resource or every future R5 foundation-resource change is
-handled as R4. A dedicated parser should be introduced when an R5 difference
-affects an onFHIR configuration model or its interpretation.
-
-This reuse lets the configuration layer remain data-driven: an R5 deployment
-can provide its own compatible FHIR definition package while continuing to use
-the shared foundation-resource mapping.
+FHIR R5 consumers should use the release-specific
+[`onfhir-r5`](../onfhir-r5/README.md) module. Its `R5Parser` currently reuses
+this implementation through inheritance while owning R5 defaults and the
+extension point for future release-specific behavior.
 
 ## Integration test suite
 
 The module's tests are the repository's end-to-end coverage of the FHIR R4
-and R5 standard packages. They take test-scope dependencies on
-[`onfhir-definitions-r4`](../onfhir-definitions-r4/README.md) and
-[`onfhir-definitions-r5`](../onfhir-definitions-r5/README.md), which package
-the real HL7 4.0.1 and 5.0.0 definitions ZIPs and base CapabilityStatements,
-plus a test-scope dependency on `onfhir-config` for the release-neutral
-configuration pipeline. None of these is a compile dependency of this module.
-
-The R5 suites live here, not in a separate module, because this module's
-`R4Parser` IS the parser the onFHIR R5 server configurator reuses (see the
-compatibility section above); the suites pin that reuse contract against the
-real 5.0.0 package. Their fixture mirrors Repofyr's `FhirR5Configurator`,
-including narrowing the value set bundles to `valuesets.json` because the R5
-core package no longer ships the v2/v3 terminology bundles.
+standard package. They take test-scope dependencies on
+[`onfhir-definitions-r4`](../onfhir-definitions-r4/README.md), which packages
+the real HL7 4.0.1 definitions ZIP and base CapabilityStatement, plus
+`onfhir-config` for the release-neutral configuration pipeline. None of these
+is a compile dependency of this module. R5 coverage lives with `R5Parser` in
+`onfhir-r5`.
 
 `R4IntegrationFixtures` builds one `BaseFhirConfig` per JVM by handing a
 `new FSConfigReader(fhirVersion = "R4")` - with no explicit file paths, so the
@@ -88,12 +70,10 @@ definitions resolve from the classpath - to a minimal concrete
 | `R4StandardPackageParsingTest` | type universes, profile and value set restrictions, `Observation`/`Patient` element restrictions and invariants, extensional and filter-based ValueSet expansion, and the parsed base CapabilityStatement |
 | `R4StandardValidationTest` | `FhirValidator` over the real definitions: conformant resources plus one negative case per validation category, Bundle entry paths, and `meta.profile` handling |
 | `R4SearchParameterConfiguratorTest` | `R4Parser.parseSearchParameter` over all 1375 standard definitions and `SearchParameterConfigurator` path, choice-expansion, and reference-target resolution |
-| `R5StandardPackageParsingTest` | the R5 package through the same parsers: R5 type universes (`integer64`, `CodeableReference`, ...), widened `Observation` choice/reference targets, the terminology gap left by the missing v2/v3 bundles, the base R5 CapabilityStatement, and R5 SearchParameter parsing/configuration |
-| `R5StandardValidationTest` | `FhirValidator` over the R5-parsed definitions: conformant resources, one negative case per category, R5-widened reference targets, and the THO ValueSet warning |
 
 Applications that ship their own definitions package do not need
-`onfhir-definitions-r4` or `onfhir-definitions-r5`; they are a convenience for
-tests and for consumers that want a standard package on the classpath.
+`onfhir-definitions-r4`; it is a convenience for tests and consumers that want
+the standard package on the classpath.
 
 ## Scope
 

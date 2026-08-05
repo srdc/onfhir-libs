@@ -36,7 +36,8 @@ flowchart LR
 The module provides readers for configuration resources and reusable logic for
 turning them into compact onFHIR configuration models. A release-compatible
 implementation of `IFhirFoundationResourceParser` interprets the resource
-content; for example, `onfhir-r4` provides `R4Parser`.
+content; for example, `onfhir-r4` provides `R4Parser` and `onfhir-r5`
+provides `R5Parser`.
 
 ## Supported resources
 

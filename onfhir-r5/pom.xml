@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -10,9 +10,9 @@
         <version>${revision}</version>
     </parent>
 
-    <artifactId>onfhir-r4_2.13</artifactId>
+    <artifactId>onfhir-r5_2.13</artifactId>
     <properties><library.gates.skip>false</library.gates.skip></properties>
-    <name>FHIR R4 implementation</name>
+    <name>FHIR R5 implementation</name>
     <!-- Declared explicitly because Maven appends the artifactId to inherited
          URLs; published POMs must point at the repository root -->
     <url>https://github.com/srdc/onfhir-libs</url>
@@ -51,22 +51,19 @@
             <artifactId>onfhir-common_${scala.binary.version}</artifactId>
             <version>${onfhir.libs.version}</version>
         </dependency>
+        <!-- R5 currently reuses the R4-compatible foundation-resource mapping.
+             The R5 facade owns release-specific defaults and is the extension
+             point for future R5 parsing differences. -->
         <dependency>
             <groupId>io.onfhir</groupId>
-            <artifactId>onfhir-validation_${scala.binary.version}</artifactId>
+            <artifactId>onfhir-r4_${scala.binary.version}</artifactId>
             <version>${onfhir.libs.version}</version>
         </dependency>
-        <!-- Provider-neutral logging API -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <!-- Integration tests only: the real FHIR R4 standard definitions
-             package and the release-neutral configuration pipeline that reads
-             it. None of these is a compile dependency of this module. -->
+        <!-- Integration tests only: the real FHIR R5 standard definitions
+             package and the release-neutral configuration pipeline. -->
         <dependency>
             <groupId>io.onfhir</groupId>
-            <artifactId>onfhir-definitions-r4</artifactId>
+            <artifactId>onfhir-definitions-r5</artifactId>
             <version>${onfhir.libs.version}</version>
             <scope>test</scope>
         </dependency>

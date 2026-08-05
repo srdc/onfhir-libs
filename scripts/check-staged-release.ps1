@@ -26,6 +26,7 @@ $artifacts = [ordered]@{
     "onfhir-definitions-r4" = "jar"
     "onfhir-definitions-r5" = "jar"
     "onfhir-r4_2.13" = "jar"
+    "onfhir-r5_2.13" = "jar"
     "onfhir-libs-bom" = "pom"
 }
 

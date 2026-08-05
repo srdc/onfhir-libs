@@ -76,6 +76,7 @@
         <module>onfhir-definitions-r4</module>
         <module>onfhir-definitions-r5</module>
         <module>onfhir-r4</module>
+        <module>onfhir-r5</module>
         <module>onfhir-libs-bom</module>
     </modules>
 

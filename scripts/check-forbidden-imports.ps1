@@ -16,7 +16,8 @@ $libraryModules = @(
     "onfhir-expression",
     "onfhir-validation",
     "onfhir-template-engine",
-    "onfhir-r4"
+    "onfhir-r4",
+    "onfhir-r5"
 )
 
 $sourcePattern = '(?<![A-Za-z0-9_])(akka\.|org\.apache\.pekko\.)'

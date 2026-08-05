@@ -1,10 +1,10 @@
-package io.onfhir.r4
+package io.onfhir.r5
 
 import io.onfhir.api.FOUNDATION_RESOURCES_FILE_SUFFIX
 import io.onfhir.api.Resource
 import io.onfhir.api.parsers.IFhirFoundationResourceParser
 import io.onfhir.config.{BaseFhirConfig, BaseFhirConfigurator, FHIRCapabilityStatement, FSConfigReader, FhirCapabilityDefaults}
-import io.onfhir.r4.parsers.R4Parser
+import io.onfhir.r5.parsers.R5Parser
 import io.onfhir.validation.FhirValidator
 import org.json4s.JsonAST.JObject
 import org.json4s.jackson.JsonMethods
@@ -13,10 +13,9 @@ import scala.concurrent.duration.{Duration, DurationInt}
 import scala.concurrent.{Await, ExecutionContext, Future}
 
 /**
- * Shared fixture for the R5 integration suites, which live in this module
- * because the onFHIR R5 server configurator reuses [[R4Parser]] for foundation
- * resources. These suites pin that reuse contract against the real FHIR R5
- * 5.0.0 package supplied by the test-scope `onfhir-definitions-r5` artifact.
+ * Shared fixture for the R5 integration suites. These suites pin the
+ * [[R5Parser]] contract against the real FHIR R5 5.0.0 package supplied by the
+ * test-scope `onfhir-definitions-r5` artifact.
  *
  * The private configurator mirrors Repofyr's `FhirR5Configurator`
  * (onfhir-server-r5) in the two respects that matter to the library layer:
@@ -50,7 +49,7 @@ object R5IntegrationFixtures {
     override def getFoundationResourceParser(complexTypes: Set[String],
                                              primitiveTypes: Set[String],
                                              capabilityDefaults: FhirCapabilityDefaults): IFhirFoundationResourceParser =
-      new R4Parser(complexTypes, primitiveTypes, capabilityDefaults)
+      new R5Parser(complexTypes, primitiveTypes, capabilityDefaults)
   }
 
   private val configurator = new R5TestConfigurator
@@ -64,7 +63,7 @@ object R5IntegrationFixtures {
   /** Validator over the parsed standard package. */
   lazy val validator: FhirValidator = FhirValidator(fhirConfig)
 
-  /** The base R5 CapabilityStatement parsed with the same (R4) parser. */
+  /** The base R5 CapabilityStatement parsed with the R5 parser. */
   lazy val capabilityStatement: FHIRCapabilityStatement =
     configurator
       .getFoundationResourceParser(

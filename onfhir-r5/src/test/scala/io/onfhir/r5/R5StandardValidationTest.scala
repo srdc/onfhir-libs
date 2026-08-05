@@ -1,4 +1,4 @@
-package io.onfhir.r4
+package io.onfhir.r5
 
 import io.onfhir.api.model.OutcomeIssue
 import org.junit.runner.RunWith
@@ -7,8 +7,8 @@ import org.specs2.runner.JUnitRunner
 
 /**
  * Integration suite: validate resources through `FhirValidator` against the
- * real R5 5.0.0 definitions parsed by [[R5IntegrationFixtures]] with the R4
- * parsers (the reuse contract the onFHIR R5 server relies on).
+ * real R5 5.0.0 definitions parsed by [[R5IntegrationFixtures]] with
+ * [[io.onfhir.r5.parsers.R5Parser]].
  *
  * Deliberately more compact than the R4 validation suite: validator mechanics
  * are already covered there, so this suite asserts one case per category to

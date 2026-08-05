@@ -5,9 +5,9 @@ Evidence captured: 2026-08-03
 Target repository: `srdc/onfhir-libs`
 Proposed license after approval: Apache License 2.0
 
-This record covers the nine reusable modules only. The current monorepo and
-Repofyr server repository remain GPL-3.0. No license file may be replaced until
-the decision owner records approval here.
+This record covers the original nine reusable modules only. The current
+monorepo and Repofyr server repository remain GPL-3.0. No license file may be
+replaced until the decision owner records approval here.
 
 ## Contributor evidence
 

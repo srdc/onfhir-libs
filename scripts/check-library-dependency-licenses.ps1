@@ -8,7 +8,7 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $modules = @(
     "onfhir-common", "onfhir-client", "onfhir-path", "onfhir-query",
     "onfhir-config", "onfhir-expression", "onfhir-validation",
-    "onfhir-template-engine", "onfhir-r4"
+    "onfhir-template-engine", "onfhir-r4", "onfhir-r5"
 )
 $moduleList = $modules -join ","
 $report = Join-Path $repoRoot "target\generated-sources\license\THIRD-PARTY.txt"
