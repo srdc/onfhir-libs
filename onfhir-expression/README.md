@@ -163,7 +163,9 @@ templates containing FHIRPath placeholders.
 
 The template handler supports `validateExpression` and `evaluateExpression`.
 Templates are value-generating expressions, so the handler rejects
-`satisfies`. See the
+`satisfies`. Its `validateExpression` checks only that the expression carries
+template content; placeholder syntax and the embedded FHIRPath expressions are
+validated during rendering. See the
 [`onfhir-template-engine` README](../onfhir-template-engine/README.md) for its
 syntax and executable examples.
 
