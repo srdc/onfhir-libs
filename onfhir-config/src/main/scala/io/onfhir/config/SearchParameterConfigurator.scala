@@ -188,9 +188,10 @@ class SearchParameterConfigurator(
    * @param restrictions
    * @param targetReferences
    * @param onExtension
+   * @param compositeComponents Component parameter names of a composite, in declaration order
    * @return
    */
-  private def constructConfFromDef(searchParameterDef: FHIRSearchParameter, finalPaths: Seq[String], finalTargetTypes: Seq[String], restrictions: Seq[Seq[(String, String)]], targetReferences: Seq[Set[String]] = Nil, onExtension: Boolean = false): SearchParameterConf = {
+  private def constructConfFromDef(searchParameterDef: FHIRSearchParameter, finalPaths: Seq[String], finalTargetTypes: Seq[String], restrictions: Seq[Seq[(String, String)]], targetReferences: Seq[Set[String]] = Nil, onExtension: Boolean = false, compositeComponents: Seq[String] = Nil): SearchParameterConf = {
     SearchParameterConf(
       url = searchParameterDef.url,
       pname = searchParameterDef.name,
@@ -207,7 +208,7 @@ class SearchParameterConfigurator(
                 case oth => searchParameterDef.target.toSeq.intersect(oth)
               }
 
-          case FHIR_PARAMETER_TYPES.COMPOSITE => targetReferences.head.toSeq
+          case FHIR_PARAMETER_TYPES.COMPOSITE => compositeComponents
           case _ => Nil
         }
       ,
@@ -299,28 +300,28 @@ class SearchParameterConfigurator(
     val combinedParamUrls = searchParameterDef.components
 
     //Check if all parameters exist
-    if (!combinedParamUrls.subsetOf(allSearchParameters.keySet)) {
+    val missingParamUrls = combinedParamUrls.filterNot(allSearchParameters.contains)
+    if (missingParamUrls.nonEmpty) {
       //throw new InitializationException(s"Some of the parameters ${combinedParamNames.diff(otherParameters)} referred in composite parameter $pname does not exist in defined parameters for the resource type $rtype!")
-      logger.warn(s"Some of the parameters ${combinedParamUrls.diff(allSearchParameters.keySet)} referred in composite parameter ${searchParameterDef.name} does not exist in defined parameters for the resource type $rtype!")
+      logger.warn(s"Some of the parameters ${missingParamUrls.mkString(", ")} referred in composite parameter ${searchParameterDef.name} does not exist in defined parameters for the resource type $rtype!")
       None
     } else {
       // Find common paths for the composite parameters from expression
       val compositionPaths =
         searchParameterDef.expression.get
           .split('|') //Split if there are alternative paths
-          .filter(_.startsWith(rtype)) //Filter the related paths
-          .map(_.trim().replace(rtype, "")) //Remove the resource type part from the path
-          .map(p => if (p != "") p.drop(1) else p) //Remove the dot after resource type if exist
+          .map(_.trim) //Alternatives other than the first one are padded with white space
+          .filter(p => p == rtype || p.startsWith(rtype + ".")) //Only the paths of this resource type; the dot keeps a longer type name out
+          .map(_.stripPrefix(rtype).stripPrefix(".")) //Remove the resource type part from the path
           .map(p => p -> Nil)
 
       val (finalPaths, finalTargetTypes, _, _) = transformPathsAndExtractTargetTypes(searchParameterDef.ptype, compositionPaths.toIndexedSeq)
 
+      //Component names in the order the definition declares them, so that the
+      //'$' separated parts of a composite search statement bind positionally
       val combinedParamNames = combinedParamUrls.map(url => allSearchParameters(url))
-      //combinedParamUrls
-      //.map(c => c.split('/').last) //Take the last part
-      //.map(d => d.substring(d.indexOf('-')+1)) //Split it from the first - to get the parameter name
 
-      Some(constructConfFromDef(searchParameterDef, finalPaths, finalTargetTypes, Nil, Seq(combinedParamNames)))
+      Some(constructConfFromDef(searchParameterDef, finalPaths, finalTargetTypes, Nil, compositeComponents = combinedParamNames))
     }
   }
   /*

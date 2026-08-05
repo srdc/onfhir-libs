@@ -58,6 +58,23 @@ class R4SearchParameterConfiguratorTest extends Specification {
   private def confFor(name: String): Option[SearchParameterConf] =
     observationSearchParameters.find(_.name == name).flatMap(observationConfigurator.createSearchParameterConf)
 
+  /** Search parameters and a configurator for any resource type of the package. */
+  private def parametersFor(rtype: String): Seq[FHIRSearchParameter] =
+    allSearchParameters.filter(_.base.contains(rtype))
+
+  private def configuratorFor(rtype: String): SearchParameterConfigurator =
+    new SearchParameterConfigurator(
+      rtype = rtype,
+      rtypeBaseProfile = None,
+      fhirConfig = serverConfig,
+      allSearchParameters = parametersFor(rtype).map(sp => sp.url -> sp.name).toMap)
+
+  private def confFor(rtype: String, name: String): Option[SearchParameterConf] =
+    parametersFor(rtype).find(_.name == name).flatMap(configuratorFor(rtype).createSearchParameterConf)
+
+  private def exprOf(name: String): String =
+    observationSearchParameters.find(_.name == name).flatMap(_.expression).getOrElse("<none>")
+
   "R4Parser" should {
 
     "parse every SearchParameter of the standard package" in {
@@ -155,6 +172,63 @@ class R4SearchParameterConfiguratorTest extends Specification {
 
       codeValueQuantity.get.ptype mustEqual "composite"
       codeValueQuantity.get.targets.toSet mustEqual Set("code", "value-quantity")
+    }
+
+    // A composite's own paths are the base context of its expression. Where the
+    // definition declares alternatives, every alternative belonging to this
+    // resource type has to survive.
+    "keep every base context alternative of a composite expression" in {
+      exprOf("combo-code-value-quantity") mustEqual "Observation | Observation.component"
+
+      val comboCodeValueQuantity = confFor("combo-code-value-quantity")
+      comboCodeValueQuantity must beSome
+
+      comboCodeValueQuantity.get.paths mustEqual Seq("", "component[i]")
+      comboCodeValueQuantity.get.targetTypes mustEqual Seq("Resource", "BackboneElement")
+    }
+
+    "resolve the base context of a composite for a resource type that is not first in its expression" in {
+      // context-type-value is declared over many resource types in one
+      // expression; CodeSystem is not the first of them.
+      val contextTypeValue = confFor("CodeSystem", "context-type-value")
+      contextTypeValue must beSome
+
+      contextTypeValue.get.paths mustEqual Seq("useContext[i]")
+      contextTypeValue.get.targetTypes mustEqual Seq("UsageContext")
+      contextTypeValue.get.targets mustEqual Seq("context-type", "context")
+    }
+
+    "not treat a longer resource type name as this resource type" in {
+      // 'ObservationDefinition.category' must not be mistaken for an Observation
+      // path, which prefix matching without a dot boundary would do.
+      val synthetic = observationSearchParameters
+        .find(_.name == "code-value-quantity").get
+        .copy(
+          name = "synthetic-prefix-composite",
+          expression = Some("ObservationDefinition.category | Observation.category"))
+
+      observationConfigurator.createSearchParameterConf(synthetic).map(_.paths) mustEqual Some(Seq("category[i]"))
+    }
+
+    "keep resolving a nested base context" in {
+      val windowCoordinate = confFor("MolecularSequence", "chromosome-window-coordinate")
+      windowCoordinate must beSome
+
+      windowCoordinate.get.paths mustEqual Seq("referenceSeq")
+    }
+
+    "preserve the declared order of composite components" in {
+      // Scala's immutable Set keeps insertion order only up to four elements, so
+      // a wider composite is what exposes ordering.
+      val components = Seq("code", "value-quantity", "value-concept", "value-date", "value-string")
+      val urls = components.map(name =>
+        parametersFor("Observation").find(_.name == name).map(_.url).getOrElse(s"urn:missing:$name"))
+
+      val synthetic = observationSearchParameters
+        .find(_.name == "code-value-quantity").get
+        .copy(name = "synthetic-wide-composite", components = urls)
+
+      observationConfigurator.createSearchParameterConf(synthetic).map(_.targets) mustEqual Some(components)
     }
   }
 }

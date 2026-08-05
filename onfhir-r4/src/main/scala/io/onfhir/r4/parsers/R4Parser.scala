@@ -124,7 +124,8 @@ class R4Parser(
       multipleAnd = (searchParameter \ "multipleAnd").extractOpt[Boolean],
       comparators = (searchParameter \ "comparator").extractOrElse[Seq[String]](Nil).toSet,
       modifiers = (searchParameter \ "modifier").extractOrElse[Seq[String]](Nil).toSet,
-      components = (searchParameter \ "component" \ "definition").extractOrElse[Seq[String]](Nil).toSet
+      //Order is significant; a composite statement binds its value parts to the components positionally
+      components = (searchParameter \ "component" \ "definition").extractOrElse[Seq[String]](Nil)
     )
   }
 

@@ -14,7 +14,9 @@ package io.onfhir.config
  * @param multipleAnd   If it allows multiple parameters (and)
  * @param comparators   Allowed comparators used with parameter
  * @param modifiers     Allowed modifiers used with parameter
- * @param components    URL of search parameter definitions for children of composite parameters
+ * @param components    URLs of search parameter definitions for children of composite parameters,
+ *                      in the order the definition declares them; a composite search statement
+ *                      binds its '$' separated value parts to the components by that order
  */
 case class FHIRSearchParameter(
                                 name:String,
@@ -28,5 +30,5 @@ case class FHIRSearchParameter(
                                 multipleAnd:Option[Boolean],
                                 comparators:Set[String],
                                 modifiers:Set[String],
-                                components:Set[String]
+                                components:Seq[String]
                               )
