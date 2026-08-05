@@ -3,10 +3,27 @@ package io.onfhir.validation
 import io.onfhir.api.FHIR_DATA_TYPES
 import io.onfhir.api.util.FHIRUtil
 import io.onfhir.api.validation.{ConstraintKeys, ElementRestrictions, ProfileRestrictions}
-import io.onfhir.config.FhirServerConfig
+import io.onfhir.config.BaseFhirConfig
 import org.slf4j.Logger
 
-abstract class BaseFhirProfileHandler(val fhirConfig: FhirServerConfig) {
+/**
+ * Base helper for navigating parsed FHIR profile restrictions to resolve element paths.
+ *
+ * Given a path and a chain of profiles, it answers the two questions callers ask about
+ * a definition: which element restriction and target FHIR data type a path resolves to,
+ * and whether that path is an array. It handles choice ([x]) elements, paths that
+ * continue inside a complex data type, and elements defined via contentReference.
+ *
+ * It is used for search-parameter path resolution, FHIR Path patch path resolution, and
+ * XML/JSON conversion decisions.
+ *
+ * It lives in onfhir-config because it needs only parsed configuration
+ * ([[io.onfhir.config.BaseFhirConfig]] plus profile restrictions) and its main in-repo
+ * consumer is the configuration layer; it performs no content validation itself.
+ *
+ * @param fhirConfig Parsed FHIR configuration holding the profile and data type definitions
+ */
+abstract class BaseFhirProfileHandler(val fhirConfig: BaseFhirConfig) {
   protected val logger:Logger
   /**
    * Check if a search path match with element definition path
@@ -36,10 +53,8 @@ abstract class BaseFhirProfileHandler(val fhirConfig: FhirServerConfig) {
         //If it is not a content reference, check if path matches
         case None => checkPathsMatch(path, p._1)
         //If it is a content reference than
-        case Some(cr) if path.startsWith(p._1) =>
+        case Some(_) if path.startsWith(p._1) =>
           true
-          //if common prefix is not empty
-          //cr.zip(path).takeWhile(c => c._1 == c._2).map(_._1).mkString != ""
         //Otherwise false
         case _ => false
       }) match {

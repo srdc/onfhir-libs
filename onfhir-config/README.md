@@ -7,9 +7,11 @@ CompartmentDefinition content from files, ZIPs, or a FHIR API.
 
 Maven coordinate: `io.onfhir:onfhir-config_2.13`. Principal APIs include
 `FSConfigReader`, `FhirApiConfigReader`, `BaseConfigReader`,
-`BaseFhirConfigurator`, and `SearchParameterConfigurator`. It composes Common,
-Client, and Validation; concrete release configurators live in the relevant
-FHIR release/server modules.
+`BaseFhirConfigurator`, `SearchParameterConfigurator`, and
+`BaseFhirProfileHandler` (package `io.onfhir.validation`; resolves element
+paths against parsed profiles for search-parameter, patch-path, and XML/JSON
+conversion decisions). It composes Common, Client, and Validation; concrete
+release configurators live in the relevant FHIR release/server modules.
 
 ```scala
 import io.onfhir.config.FSConfigReader

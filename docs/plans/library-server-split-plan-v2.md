@@ -1180,9 +1180,12 @@ These rows are planned contracts. Each implementation phase replaces
 | `io.onfhir.api.util.SubscriptionUtil` contract | `onfhir-common_2.13` | `onfhir-core_2.13` | none | 3.5 | implemented 2026-08-03 |
 | `io.onfhir.api.util.ImMemorySearchUtil` | `onfhir-common_2.13` | `onfhir-query_2.13` | none | 3.6 | implemented 2026-08-03 |
 | `io.onfhir.api.util.InMemoryPrefixModifierHandler` | `onfhir-common_2.13` | `onfhir-query_2.13` | none | 3.6 | implemented 2026-08-03 |
+| `io.onfhir.validation.BaseFhirProfileHandler` | `onfhir-validation_2.13` | `onfhir-config_2.13` | none | 5A | implemented 2026-08-05 |
 
 Consumers relying on transitive availability from `onfhir-common` must add a
-direct dependency on the new owning artifact where applicable.
+direct dependency on the new owning artifact where applicable. Consumers of
+`BaseFhirProfileHandler` must declare a direct `onfhir-config_2.13`
+dependency; the class keeps its `io.onfhir.validation` package.
 
 ### 7.2 Public HTTP and client signatures
 
@@ -1228,6 +1231,7 @@ direct dependency on the new owning artifact where applicable.
 | `BaseFhirClient` missing resource type/id throwing `BadRequestException` | `FhirClientException` | 3.5 - implemented 2026-08-03 |
 | Common impossible states throwing `InternalServerException` | `IllegalStateException`; HTTP 500 exception remains in Core | 3.5 - implemented 2026-08-03 |
 | concrete `new SubscriptionUtil(config, settings, handling)` | release-specific `SubscriptionUtil` obtained from `IFhirServerConfigurator.getSubscriptionUtil(...)` | 3.5 - implemented 2026-08-03 |
+| `new BaseFhirProfileHandler(FhirServerConfig)` | `new BaseFhirProfileHandler(BaseFhirConfig)`; existing callers pass the subtype unchanged | 5A - implemented 2026-08-05 |
 
 ### 7.3 Build and version contracts
 

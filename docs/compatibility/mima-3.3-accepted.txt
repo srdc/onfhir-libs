@@ -1,4 +1,4 @@
-﻿# MiMa accepted compatibility report
+# MiMa accepted compatibility report
 # Baseline: io.onfhir reusable artifacts 3.3
 # Every reported break must have a corresponding migration-table entry.
 # Reconciliation: docs/compatibility/mima-3.3-reconciliation.md
@@ -270,6 +270,7 @@ NEW-ARTIFACT: no 3.3 artifact was available
 
 ## onfhir-config_2.13
 io.onfhir.config.BaseFhirServerConfigurator: MissingClass
+io.onfhir.config.SearchParameterConfigurator: MissingTypes
 
 ## onfhir-expression_2.13
 COMPATIBLE
@@ -277,11 +278,15 @@ COMPATIBLE
 ## onfhir-validation_2.13
 io.onfhir.validation.AbstractStructureDefinitionParser.parseElementDef: IncompatibleMethType
 io.onfhir.validation.AbstractStructureDefinitionParser.parseElementDef: ReversedMissingMethod
+io.onfhir.validation.BaseFhirProfileHandler: MissingClass
 io.onfhir.validation.FhirContentValidator.apply: DirectMissingMethod
 io.onfhir.validation.FhirContentValidator.this: DirectMissingMethod
 io.onfhir.validation.FhirContentValidator.apply: DirectMissingMethod
 
-## onfhir-template-engine
+## onfhir-template-engine_2.13
+NEW-ARTIFACT: no 3.3 artifact was available
+
+## onfhir-definitions-r4
 NEW-ARTIFACT: no 3.3 artifact was available
 
 ## onfhir-r4_2.13
