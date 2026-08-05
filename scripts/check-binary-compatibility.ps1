@@ -104,7 +104,12 @@ $report = ($reportLines -join [Environment]::NewLine).TrimEnd() + [Environment]:
 if ($UpdateBaseline) {
     $parent = Split-Path -Parent $baseline
     if (-not (Test-Path $parent)) { New-Item -ItemType Directory -Path $parent -Force | Out-Null }
-    Set-Content -LiteralPath $baseline -Value $report -Encoding UTF8
+    # Write UTF-8 without a BOM and without an extra trailing newline. Set-Content
+    # -Encoding UTF8 emits a BOM on Windows PowerShell 5.1 but not on PowerShell 7,
+    # and appends its own line ending to a value that already ends with one, so the
+    # baseline would change depending on which edition regenerated it.
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($baseline, $report, $utf8NoBom)
     Write-Output ("Updated MiMa baseline: {0}" -f $baseline)
     exit 0
 }
