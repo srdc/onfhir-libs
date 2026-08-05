@@ -38,6 +38,12 @@ class FhirTemplateExpressionHandler(
    */
   private val templatePlaceholderInside = """\{\{(((?!\{\{).)+)\}\}""".r
   /**
+   * Regular expression for a cardinality marker leading a placeholder expression e.g. '? ' in {{? Observation.id}}.
+   * '*' and '?' can never start a FHIR Path expression, while '+' is only treated as a marker when followed by
+   * whitespace so that a unary plus e.g. {{+5}} is still evaluated.
+   */
+  private val templateCardinalityMarker = """^\s*([\*\?]|\+\s)""".r
+  /**
    * Regular expression for Template Section Field
    */
   private val templateSectionField = """^\{\{#(\w+)\}\}$""".r
@@ -58,11 +64,27 @@ class FhirTemplateExpressionHandler(
 
   /**
    * Validate the expression
+   *
+   * The template content is expected either as parsed JSON in 'value' (the common case) or as a
+   * template string in 'expression'. Anything that [[evaluateExpression]] can render is accepted here, so
+   * validation only rejects expressions that carry no template content at all. Placeholder syntax and the
+   * embedded FHIR Path expressions are not validated ahead of evaluation.
    * @param expression  Parsed expression
    */
   def validateExpression(expression: FhirExpression):Unit = {
-    if(expression.value.isEmpty || expression.value.get.isInstanceOf[JObject])
-      throw FhirExpressionException(s"Missing FHIR template content or invalid template!")
+    resolveTemplateContent(expression)
+  }
+
+  /**
+   * Resolve the template content of the given expression
+   * @param expression  Parsed expression
+   * @return            Parsed JSON template from 'value', or the template string from 'expression' as a JString
+   */
+  private def resolveTemplateContent(expression: FhirExpression):JValue = {
+    expression.value
+      .filter(v => v != JNull && v != JNothing)
+      .orElse(expression.expression.filter(_.nonEmpty).map(JString(_)))
+      .getOrElse(throw FhirExpressionException(s"Missing FHIR template content! Provide the parsed JSON template in 'value' or a template string in 'expression'."))
   }
 
   /**
@@ -88,7 +110,7 @@ class FhirTemplateExpressionHandler(
    */
   override def evaluateExpression(expression: FhirExpression, contextParams: Map[String, JValue], input: JValue)(implicit ex: ExecutionContext): Future[JValue] = {
     Future.apply {
-      val fhirTemplate = expression.value.orElse(expression.expression.map(JString(_))).get
+      val fhirTemplate = resolveTemplateContent(expression)
       //Get the final evaluator
       val evaluator = if(contextParams.isEmpty) fhirPathEvaluator else fhirPathEvaluator.copy(environmentVariables = fhirPathEvaluator.environmentVariables ++ contextParams)
 
@@ -121,9 +143,16 @@ class FhirTemplateExpressionHandler(
         handleInternalMatches(s, fhirPathEvaluator, input)
 
       //A section definition within template (like mustache sections) for repetitive or optional sections
-      case JObject(List((sectionField,JString(sectionStatement)), (valueField,valuePart))) if sectionField.startsWith("{{#") && sectionField.endsWith("}}")  =>
-        val result = handleTemplateSection(sectionField, sectionStatement, valueField, valuePart, fhirPathEvaluator, input)
-        result
+      //JSON field order is not significant, so the section variable declaration may come in either position
+      case JObject(fields) if fields.exists(_._1.startsWith("{{#")) =>
+        fields.partition(_._1.startsWith("{{#")) match {
+          case (List((sectionField, JString(sectionStatement))), List((valueField, valuePart))) =>
+            handleTemplateSection(sectionField, sectionStatement, valueField, valuePart, fhirPathEvaluator, input)
+          case _ =>
+            throw FhirExpressionException(
+              s"Invalid FHIR template section! A section is a JSON object with exactly two fields; a section variable declaration e.g. \"{{#member}}\": \"{{<FHIR path statement>}}\" and a section value e.g. \"{{*}}\": {...}.",
+              Some(JObject(fields).toJson))
+        }
       //Go recursive on fields
       case JObject(fields) =>
         JObject(
@@ -212,7 +241,7 @@ class FhirTemplateExpressionHandler(
         else
           JArray(finalResults.toList)
       case "{{?}}" => finalResults.headOption.getOrElse(JNull)
-      case _ => throw  FhirExpressionException(s"Invalid FHIR template section value field! Use '{{*}}' for arrays and '{{?}}' for optional JSON objects.", Some(valueField))
+      case _ => throw  FhirExpressionException(s"Invalid FHIR template section value field! Use '{{*}}' or '{{+}}' for arrays and '{{?}}' for optional JSON objects.", Some(valueField))
     }
   }
 
@@ -251,6 +280,8 @@ class FhirTemplateExpressionHandler(
   private def handleInternalMatches(strValue:String, fhirPathEvaluator:FhirPathEvaluator, input:JValue):JString = {
     def findMatch(m:Regex.Match):String = {
       val fhirPathExpression = m.group(1)
+      if(templateCardinalityMarker.findFirstIn(fhirPathExpression).nonEmpty)
+        throw FhirExpressionException(s"Cardinality markers ('?', '*', '+') are not supported for placeholders used within FHIR string values; such a placeholder must return exactly one primitive value!", Some(fhirPathExpression))
       val fhirPathResult:Seq[FhirPathResult] =
         try {
           fhirPathEvaluator.evaluate(fhirPathExpression, input)
@@ -274,8 +305,9 @@ class FhirTemplateExpressionHandler(
       }
     }
 
-    //Fill the placeholder values
-    val filledValue = templatePlaceholderInside.replaceAllIn(strValue, replacer = findMatch)
+    //Fill the placeholder values; quote the resolved values as the replacement is otherwise interpreted
+    //(a '$' would be read as a group reference and a '\' as an escape) e.g. a resolved value '100$'
+    val filledValue = templatePlaceholderInside.replaceAllIn(strValue, replacer = m => Regex.quoteReplacement(findMatch(m)))
     JString(filledValue)
   }
 
