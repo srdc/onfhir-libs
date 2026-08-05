@@ -56,7 +56,7 @@ case class ReferenceRestrictions(referenceDataTypes:Set[String],
           //If not given, return nil
           case _ => Nil
         }
-      case None =>
+      case _ =>
         Nil
     }
   }

@@ -215,7 +215,9 @@ configured terminology can express. The following gaps are known:
 The module's tests build compact `ProfileRestrictions` directly. This keeps
 unit tests fast, deterministic, and independent of an R4/R5 package ZIP. Put
 release-package compatibility tests beside the corresponding release parser or
-in a dedicated integration-test module.
+in a dedicated integration-test module. For R4 those tests exist in
+`onfhir-r4`, which validates realistic resources against the real 4.0.1
+package supplied by `onfhir-definitions-r4`.
 
 Run the module test suite from the library reactor:
 
