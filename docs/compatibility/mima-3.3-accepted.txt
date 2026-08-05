@@ -139,6 +139,12 @@ io.onfhir.authz.ICustomAuditHandler: MissingClass
 io.onfhir.authz.ITokenResolver: MissingClass
 io.onfhir.authz.TokenClient: MissingClass
 io.onfhir.config.AuthzConfig: MissingClass
+io.onfhir.config.FHIRSearchParameter.apply: IncompatibleMethType
+io.onfhir.config.FHIRSearchParameter.components: IncompatibleResultType
+io.onfhir.config.FHIRSearchParameter.copy: IncompatibleMethType
+io.onfhir.config.FHIRSearchParameter.copy$default$12: IncompatibleResultType
+io.onfhir.config.FHIRSearchParameter.this: IncompatibleMethType
+io.onfhir.config.FHIRSearchParameter.apply: IncompatibleMethType
 io.onfhir.config.FhirServerConfig.FHIR_DEFAULT_MEDIA_TYPE: IncompatibleResultType
 io.onfhir.config.FhirServerConfig.FHIR_DEFAULT_MEDIA_TYPE_=: IncompatibleMethType
 io.onfhir.config.IFhirServerConfigurator: MissingClass
