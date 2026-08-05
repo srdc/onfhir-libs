@@ -109,6 +109,19 @@ abstract class AbstractReferenceResolver(val resource: Resource,
   protected def isResourceExistByCanonicalUrl(url:String, rtype:String, rid:String, version:Option[String]):Future[Boolean]
 
   /**
+   * Resolve a logical reference. The default implementation retains the
+   * historic identifier lookup for typed references. Context-free external
+   * resolvers may override this hook to support type-less logical references.
+   */
+  protected def getResourceByLogicalReference(reference:FhirLogicalReference):Future[Option[Resource]] =
+    reference.rtype match {
+      case Some(rtype) if fhirConfig.forall(_.FHIR_RESOURCE_TYPES.contains(rtype)) =>
+        getResourceByIdentifier(rtype, reference.system, reference.identifier)
+      case _ =>
+        Future.successful(None)
+    }
+
+  /**
    * Resolve a FHIR reference within onFhir
    *
    * @param reference FHIR  reference
@@ -126,21 +139,19 @@ abstract class AbstractReferenceResolver(val resource: Resource,
       //Canonical reference
       case FhirCanonicalReference(url, rtype, rid, version, fragment)  =>
        getResourceByCanonicalUrl(url, rtype,rid, version)
-          .map(_
-            .map(resource =>
-              fragment
-                .flatMap(f => getContainedResource(resource, f))  //If there is a fragment part, get from the contained resource
-                .getOrElse(resource)
-            )
-          )
+          .map(_.flatMap(resource =>
+            fragment
+              .map(f => getContainedResource(resource, f))  //If there is a fragment part, get from the contained resource
+              .getOrElse(Some(resource))
+          ))
 
       //Internal reference to contained resource
       case FhirInternalReference(ref) =>
         Future.apply(getContainedResource(resource, ref))
 
-      //If it is a logical reference and if rtype is supported, try to resolve it with identifier
-      case FhirLogicalReference(Some(rtype), system, identifier) if fhirConfig.exists(_.FHIR_RESOURCE_TYPES.contains(rtype)) =>
-        getResourceByIdentifier(rtype, system, identifier)
+      //Logical references may be delegated to a specialised implementation.
+      case logicalReference:FhirLogicalReference =>
+        getResourceByLogicalReference(logicalReference)
 
       //If it is a uuid reference within bundle
       case FhirUUIDReference(_) =>
@@ -206,32 +217,25 @@ abstract class AbstractReferenceResolver(val resource: Resource,
    */
   override def isReferencedResourceExist(reference: FhirReference, profiles: Set[String]): Future[Boolean] = {
     reference match {
-      //Normal literal reference
-      case FhirLiteralReference(url, rtype, rid, version) =>
-        checkWithinBundle(reference)
+      //Normal literal reference without version/profile checks can use a cheap existence lookup.
+      case literalReference @ FhirLiteralReference(url, rtype, rid, version) if version.isEmpty && profiles.isEmpty =>
+        checkWithinBundle(literalReference)
           .flatMap {
             case None =>
-              if(version.isEmpty && profiles.isEmpty)
-                isResourceExist(url, rtype, rid)
-              else {
-                resolveReference(reference) map {
-                  case None => false
-                  case Some(rr) =>
-                    profiles.isEmpty || //If there is no profile given
-                      FHIRUtil.extractProfilesFromBson(rr).intersect(profiles).nonEmpty //Or one of the profile is mentioned in the referenced resource
-                      //TODO Or reference resource is valid against one of the given profile
-                }
-              }
+              isResourceExist(url, rtype, rid)
             case Some(_) => Future.apply(true)
-        }
-      //Canonical reference
-      case FhirCanonicalReference(url, rtype, rid, version, fragment) =>
-        fragment match {
-          case None =>
-            isResourceExistByCanonicalUrl(url, rtype, rid, version)
-          case Some(_) =>
-            resolveReference(reference)
-              .map(_.isDefined)
+          }
+      //Canonical references without a fragment/profile check can also use a cheap existence lookup.
+      case FhirCanonicalReference(url, rtype, rid, version, None) if profiles.isEmpty =>
+        isResourceExistByCanonicalUrl(url, rtype, rid, version)
+      //Every other reference kind, and every profile-constrained reference, needs its resolved content.
+      case _ =>
+        resolveReference(reference).map {
+          case None => false
+          case Some(referencedResource) =>
+            profiles.isEmpty ||
+              FHIRUtil.extractProfilesFromBson(referencedResource).intersect(profiles).nonEmpty
+              //TODO Or referenced resource is valid against one of the given profile
         }
     }
   }

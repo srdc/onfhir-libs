@@ -643,7 +643,10 @@ object FHIRSearchParameterValueParser {
         val prefix = valueExpr.substring(0, ind)
         val expression = valueExpr.substring(ind).drop(2).dropRight(2)
         val resolvedExpression = rsv.resolveExpression(expression, paramType, modifier, prefix)
-        parseSimpleValueExpr(prefix + resolvedExpression, paramType)
+        if (rsv.preservesExpression)
+          Seq(prefix -> resolvedExpression)
+        else
+          parseSimpleValueExpr(prefix + resolvedExpression, paramType)
       case _ => parseSimpleValueExpr(valueExpr, paramType)
     }
   }

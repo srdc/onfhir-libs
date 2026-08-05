@@ -4,6 +4,9 @@ package io.onfhir.api.parsers
  * Interface for FHIRPath expression resolver for x-fhir-query statement parsing (FHIR query with placeholders)
  */
 trait ISearchParamPlaceholderResolver {
+  /** Internal signal used by shape validation to retain a checked placeholder. */
+  private[onfhir] def preservesExpression: Boolean = false
+
   /**
    * Resolve the placeholder in the expression
    * @param spValueExpr Search parameter value expression
