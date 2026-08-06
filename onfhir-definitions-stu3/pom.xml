@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.onfhir</groupId>
+        <artifactId>onfhir-libs-parent</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <!-- No Scala suffix: this artifact packages resources only and contains no
+         compiled code, so it is not bound to a Scala binary version. -->
+    <artifactId>onfhir-definitions-stu3</artifactId>
+    <properties><library.gates.skip>false</library.gates.skip></properties>
+    <name>FHIR STU3 standard definitions package</name>
+    <!-- Declared explicitly because Maven appends the artifactId to inherited
+         URLs; published POMs must point at the repository root -->
+    <url>https://github.com/srdc/onfhir-libs</url>
+    <scm>
+        <connection>scm:git:https://github.com/srdc/onfhir-libs.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/srdc/onfhir-libs.git</developerConnection>
+        <url>https://github.com/srdc/onfhir-libs</url>
+        <tag>HEAD</tag>
+    </scm>
+    <description>HL7 FHIR STU3 (3.0.2) standard definitions bundle and base CapabilityStatement, packaged for onFHIR configuration readers.</description>
+
+    <packaging>jar</packaging>
+
+    <!-- Resources only: no source directories, no Scala compilation, no tests. -->
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <!-- The parent attaches a sources JAR for every module. With no
+                         source roots here, maven-source-plugin would otherwise bundle
+                         the resources, producing a ~7 MB duplicate of the main JAR.
+                         Excluding resources leaves a marker-only sources JAR, which
+                         is what a no-code artifact should publish. -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <configuration>
+                            <excludeResources>true</excludeResources>
+                            <forceCreation>true</forceCreation>
+                        </configuration>
+                    </plugin>
+                    <!-- The parent attaches Scaladoc through scala-maven-plugin, which
+                         emits nothing here ("No source files found"). Maven Central
+                         still expects a javadoc artifact, so attach an empty one. -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>empty-javadoc-jar</id>
+                                <phase>package</phase>
+                                <goals><goal>jar</goal></goals>
+                                <configuration>
+                                    <classifier>javadoc</classifier>
+                                    <classesDirectory>${project.build.directory}/empty-javadoc</classesDirectory>
+                                    <forceCreation>true</forceCreation>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- maven-jar-plugin refuses to archive a directory that does not
+                         exist, so create the empty input directory first. -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>${antrun.plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>create-empty-javadoc-dir</id>
+                                <phase>prepare-package</phase>
+                                <goals><goal>run</goal></goals>
+                                <configuration>
+                                    <target>
+                                        <mkdir dir="${project.build.directory}/empty-javadoc"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

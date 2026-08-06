@@ -43,8 +43,10 @@ reactor and `onfhir-server-r4` endpoint suite as a regression net.
 - `onfhir-template-engine`
 - `onfhir-r4`
 - `onfhir-r5` - added 2026-08-05; R5 parser facade and compatibility tests
+- `onfhir-stu3` - added 2026-08-05; STU3 parsers layered on the R4 parsers
 - `onfhir-definitions-r4` - added 2026-08-05; resources only, no Scala suffix
 - `onfhir-definitions-r5` - added 2026-08-05; resources only, no Scala suffix
+- `onfhir-definitions-stu3` - added 2026-08-05; resources only, no Scala suffix
 
 ### Server family - remains in Repofyr
 
@@ -1338,7 +1340,8 @@ dependency; the class keeps its `io.onfhir.validation` package.
 | reusable libraries exporting Logback as the SLF4J provider | modules declare only `slf4j-api`; consuming applications select and configure their provider | 5A - implemented 2026-08-04 |
 | all internal dependencies use `${project.version}` | library-family edges use `${onfhir.libs.version}`; server-family edges retain `${project.version}` | 4 - implemented 2026-08-03 |
 | one monorepo revision | independently versioned library and server releases | 5 |
-| each server repository embedding its own copy of the FHIR definitions ZIP and base CapabilityStatement | one resources-only artifact per FHIR release, first released in 4.0.0: `io.onfhir:onfhir-definitions-r4` packaging `definitions-r4.json.zip` plus `conformance-statement-r4.json`, and `io.onfhir:onfhir-definitions-r5` packaging `definitions-r5.json.zip` plus `conformance-statement-r5.json`, all at the default classpath locations. NO Scala binary-version suffix, because invariant 3's suffix rule applies to Scala artifacts and these contain no compiled code. Versions track the reactor; the FHIR package versions 4.0.1 and 5.0.0 are recorded in per-release `onfhir-definitions-r4.properties` / `onfhir-definitions-r5.properties`, whose names carry the release so both artifacts can share a classpath. Packaged HL7 content is CC0 1.0 and every resource is marked `-text` in `.gitattributes` so published bytes do not vary by build host | 5A - implemented 2026-08-05 |
+| each server repository embedding its own copy of the FHIR definitions ZIP and base CapabilityStatement | one resources-only artifact per FHIR release, first released in 4.0.0: `io.onfhir:onfhir-definitions-r4` packaging `definitions-r4.json.zip` plus `conformance-statement-r4.json`, `io.onfhir:onfhir-definitions-r5` packaging `definitions-r5.json.zip` plus `conformance-statement-r5.json`, and `io.onfhir:onfhir-definitions-stu3` packaging `definitions-stu3.json.zip` plus `conformance-statement-stu3.json` (renamed from the server module's generic `definitions.json.zip` / `conformance-statement.json`), all at the default classpath locations. NO Scala binary-version suffix, because invariant 3's suffix rule applies to Scala artifacts and these contain no compiled code. Versions track the reactor; the FHIR package versions 4.0.1, 5.0.0 and 3.0.2 are recorded in per-release `onfhir-definitions-<release>.properties`, whose names carry the release so the artifacts can share a classpath. Packaged HL7 content is CC0 1.0 and every resource is marked `-text` in `.gitattributes` so published bytes do not vary by build host | 5A - implemented 2026-08-05 |
+| STU3 foundation-resource parsers living only in the Repofyr server module | new `io.onfhir:onfhir-stu3_2.13`, first released in 4.0.0, carrying `STU3Parser` and `STU3StructureDefinitionParser` moved from `repofyr-server-stu3` unchanged apart from their package (`io.onfhir.stu3.parsers` instead of `io.repofyr.stu3.parsers`). Both extend the corresponding `onfhir-r4` classes, so `onfhir-r4` is a compile dependency | 5A - implemented 2026-08-05 |
 | `onfhir-path` packaging its ANTLR grammar, the `antlr-4.7-complete.jar` build tool, and the generated `.tokens` files as classpath resources, because all four sat in `src/main/resources` | the same four files live in `onfhir-path/grammar/`, outside `src/`, so none of them are published. The artifact drops from 2314 KB to 473 KB and carries only classes plus `META-INF` manifest/LICENSE/NOTICE and the Maven descriptor. Nothing in the library loaded them at runtime; the compiled parser is the generated Java under `src/main/java/io/onfhir/path/grammar`. A consumer that read `/FhirPathExpr.g4`, `/FhirPathExpr.tokens`, or `/FhirPathExprLexer.tokens` off the `onfhir-path` classpath must vendor its own copy. Removing the tool JAR also closes an Apache-2.0 attribution gap that the dependency license gate could not see, since a JAR inside resources is not a declared dependency | 5A - implemented 2026-08-06 |
 | R5 consumers directly constructing `R4Parser`; R4 and R5 suites co-located in `onfhir-r4` | new `io.onfhir:onfhir-r5_2.13` with `R5Parser extends R4Parser`, R5 5.0.0 primitive/complex defaults, and the relocated R5 standard-package suites. `onfhir-r4` now tests only R4 and no longer test-depends on `onfhir-definitions-r5`; `onfhir-r5` compile-depends on `onfhir-r4` and keeps definitions/config dependencies test-only | 5A - implemented 2026-08-05 |
 
@@ -1380,13 +1383,14 @@ dependency; the class keeps its `io.onfhir.validation` package.
 
 The split is complete only when all of the following are true:
 
-- the twelve library modules build from a fresh standalone checkout;
+- the fourteen library modules build from a fresh standalone checkout;
 - their production sources, resources, and complete dependency graphs contain
   no Akka or Pekko;
 - the library artifacts have the approved coordinates, including
   `io.onfhir:onfhir-template-engine_2.13` and the deliberately unsuffixed
-  resources-only `io.onfhir:onfhir-definitions-r4` and
-  `io.onfhir:onfhir-definitions-r5`, and an independent parent/version;
+  resources-only `io.onfhir:onfhir-definitions-r4`,
+  `io.onfhir:onfhir-definitions-r5` and `io.onfhir:onfhir-definitions-stu3`,
+  and an independent parent/version;
 - Apache-2.0 relicensing approval is recorded and published artifacts contain
   correct `LICENSE` and `NOTICE` metadata;
 - Repofyr retains its server modules, GPL metadata, and existing server parent;

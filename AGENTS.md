@@ -5,11 +5,12 @@ libraries repository.
 
 ## Repository boundary
 
-This repository owns ten reusable Scala libraries - common, client, path,
-query, config, expression, validation, template engine, R4, and R5 - plus two
-resources-only artifacts, `onfhir-definitions-r4` and `onfhir-definitions-r5`,
-that package the HL7 FHIR R4 and R5 standard definitions. Server runtime code
-belongs in the Repofyr repository.
+This repository owns eleven reusable Scala libraries - common, client, path,
+query, config, expression, validation, template engine, R4, R5, and STU3 - plus
+three resources-only artifacts, `onfhir-definitions-r4`,
+`onfhir-definitions-r5` and `onfhir-definitions-stu3`, that package the HL7
+FHIR R4, R5 and STU3 standard definitions. Server runtime code belongs in the
+Repofyr repository.
 
 - Keep production source, resources, direct dependencies, and resolved
   dependency graphs free of Akka and Pekko.

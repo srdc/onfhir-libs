@@ -88,6 +88,11 @@
                 <artifactId>onfhir-r5_2.13</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.onfhir</groupId>
+                <artifactId>onfhir-stu3_2.13</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <!-- Resources-only artifacts: no Scala binary version suffix. -->
             <dependency>
                 <groupId>io.onfhir</groupId>
@@ -97,6 +102,11 @@
             <dependency>
                 <groupId>io.onfhir</groupId>
                 <artifactId>onfhir-definitions-r5</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.onfhir</groupId>
+                <artifactId>onfhir-definitions-stu3</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

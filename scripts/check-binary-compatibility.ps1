@@ -29,11 +29,14 @@ $artifacts = [ordered]@{
     # coordinate.
     "onfhir-definitions-r4" = "onfhir-definitions-r4"
     "onfhir-definitions-r5" = "onfhir-definitions-r5"
+    "onfhir-definitions-stu3" = "onfhir-definitions-stu3"
     "onfhir-r4" = "onfhir-r4_2.13"
     "onfhir-r5" = "onfhir-r5_2.13"
+    "onfhir-stu3" = "onfhir-stu3_2.13"
 }
 $newArtifacts = @("onfhir-query_2.13", "onfhir-template-engine_2.13",
-    "onfhir-definitions-r4", "onfhir-definitions-r5", "onfhir-r5_2.13")
+    "onfhir-definitions-r4", "onfhir-definitions-r5", "onfhir-definitions-stu3",
+    "onfhir-r5_2.13", "onfhir-stu3_2.13")
 
 $modules = ($artifacts.Keys -join ",")
 Push-Location $repoRoot

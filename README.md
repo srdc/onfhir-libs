@@ -21,8 +21,10 @@ IDs and `io.onfhir.*` package names are preserved.
 | [onfhir-template-engine](onfhir-template-engine/README.md) | declarative generation of FHIR or JSON content from JSON templates with FHIRPath placeholders |
 | [onfhir-r4](onfhir-r4/README.md) | reusable FHIR R4 foundation-resource parsers |
 | [onfhir-r5](onfhir-r5/README.md) | reusable FHIR R5 parser facade, defaults, and compatibility tests |
+| [onfhir-stu3](onfhir-stu3/README.md) | reusable FHIR STU3 foundation-resource parsers, layered on the R4 parsers |
 | [onfhir-definitions-r4](onfhir-definitions-r4/README.md) | packaged HL7 FHIR R4 (4.0.1) standard definitions and base CapabilityStatement (resources only, no Scala suffix) |
 | [onfhir-definitions-r5](onfhir-definitions-r5/README.md) | packaged HL7 FHIR R5 (5.0.0) standard definitions and base CapabilityStatement (resources only, no Scala suffix) |
+| [onfhir-definitions-stu3](onfhir-definitions-stu3/README.md) | packaged HL7 FHIR STU3 (3.0.2) standard definitions and base CapabilityStatement (resources only, no Scala suffix) |
 
 ## Maven
 

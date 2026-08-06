@@ -4,8 +4,8 @@ Copyright 2019-2026 SRDC Corp. and contributors
 This product includes software developed by SRDC Corp. and contributors to
 the onFHIR project.
 
-The onfhir-definitions-r4 and onfhir-definitions-r5 artifacts package HL7 FHIR
-specification content:
+The onfhir-definitions-r4, onfhir-definitions-r5 and onfhir-definitions-stu3
+artifacts package HL7 FHIR specification content:
 
 - onfhir-definitions-r4 packages FHIR R4 (4.0.1) content, the standard
   definitions bundle (definitions-r4.json.zip) and the base CapabilityStatement
@@ -15,6 +15,11 @@ specification content:
   definitions bundle (definitions-r5.json.zip) and the base CapabilityStatement
   (conformance-statement-r5.json), obtained from
   https://hl7.org/fhir/R5/definitions.json.zip
+- onfhir-definitions-stu3 packages FHIR STU3 (3.0.2) content, the standard
+  definitions bundle (definitions-stu3.json.zip) and the base
+  CapabilityStatement (conformance-statement-stu3.json), obtained from
+  https://hl7.org/fhir/STU3/definitions.json.zip and renamed to carry the
+  release
 
 HL7 publishes FHIR specification content under Creative Commons CC0 1.0
 Universal (https://creativecommons.org/publicdomain/zero/1.0/). FHIR is a

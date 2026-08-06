@@ -19,3 +19,5 @@ onfhir-definitions-r4/src/main/resources/definitions-r4.json.zip	-text
 onfhir-definitions-r4/src/main/resources/conformance-statement-r4.json	-text
 onfhir-definitions-r5/src/main/resources/definitions-r5.json.zip	-text
 onfhir-definitions-r5/src/main/resources/conformance-statement-r5.json	-text
+onfhir-definitions-stu3/src/main/resources/definitions-stu3.json.zip	-text
+onfhir-definitions-stu3/src/main/resources/conformance-statement-stu3.json	-text
