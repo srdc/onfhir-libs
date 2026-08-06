@@ -127,3 +127,8 @@ if ($reportNormalized -ne $expectedNormalized) {
     exit 1
 }
 Write-Output "check-binary-compatibility: PASS"
+# Explicit, because $LASTEXITCODE still holds the exit code of the last MiMa
+# invocation, which is nonzero whenever that artifact had breaks - including the
+# ones already accepted in the baseline. The `shell: pwsh` steps in CI exit with
+# $LASTEXITCODE, so without this the job fails on a passing run.
+exit 0
