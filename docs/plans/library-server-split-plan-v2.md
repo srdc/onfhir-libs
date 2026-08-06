@@ -1,6 +1,6 @@
 # Library / Server Split Implementation Plan - Version 2
 
-> Status: Phase 5A in progress; physical split and unsigned staging verified; signed staging awaits a usable SRDC GPG key
+> Status: Phase 5A complete; signed 4.0.0 staging produced and verified, both repositories build from fresh checkouts, and Repofyr passes against the staged artifacts. Phase 5B may begin
 >
 > Supersedes for future implementation:
 > `docs/plans/library-server-split-plan.md`
@@ -1093,27 +1093,34 @@ and signatures; Repofyr server-r4 tests pass against staged artifacts.
   33 external dependencies passed the approved license gate.
 - An unsigned file-based staging rehearsal verified all 11 coordinates,
   flattened POMs, binary JARs, source JARs, Scaladoc/Javadoc JARs, and packaged
-  license files. No artifact was published externally. That rehearsal
-  predates the template-engine suffix correction and must be repeated before
-  Phase 5A can complete.
+  license files. No artifact was published externally. That rehearsal predates
+  the template-engine suffix correction, and was superseded by the signed
+  fourteen-coordinate staging recorded below.
 - Removed all nine library source modules from the Repofyr reactor, pinned
   `onfhir.libs.version` to `4.0.0`, and retained the GPL-3.0
   `io.onfhir:fhir-repository_2.13` server parent.
 - With a fresh Maven cache resolving libraries only from the file-based
   staging repository, the source-free Repofyr reactor validated and all 146
   server-r4 tests passed with zero failures or errors.
-- Signed staging remains pending. Maven's configured key `789EC152` is not
-  present, and the only discovered local secret key is unusable for signing.
-  A usable SRDC release key is required; no replacement key was generated.
+- Signed staging is COMPLETE (2026-08-06). The SRDC release key `789EC152` was
+  imported, and `maven-gpg-plugin` signs headlessly with it through loopback
+  pinentry. The full reactor deployed all fourteen `4.0.0` coordinates to a
+  file-based staging repository with 703 tests green, and
+  `scripts/check-staged-release.ps1` verified every POM, binary, sources and
+  javadoc JAR, their packaged `META-INF/LICENSE` and `META-INF/NOTICE`, and
+  every `.asc` signature as a good signature from `SRDC Corp`. The staged POMs
+  carry the name, description, url, license, developer, scm and
+  issueManagement metadata Maven Central requires, flattened to resolved
+  versions.
 - Added the resources-only `io.onfhir:onfhir-definitions-r4:4.0.0` and
   `io.onfhir:onfhir-definitions-r5:4.0.0` modules (2026-08-05), so the reactor
   now builds twelve reusable modules plus the BOM, and the family publishes
   fourteen coordinates rather than eleven. They package the HL7 FHIR 4.0.1 and
   5.0.0 definitions ZIPs and base CapabilityStatements, copied byte-for-byte
   from `onfhir-server-r4` and `onfhir-server-r5`; both are recorded in the
-  Section 7.3 migration table. Consequences for the remaining Phase 5A work:
-  the unsigned staging rehearsal must be repeated for the three new coordinates
-  as well as for the corrected template-engine suffix. Because neither
+  Section 7.3 migration table. The staging rehearsal was accordingly repeated
+  for the three new coordinates as well as for the corrected template-engine
+  suffix, and is now signed. Because neither
   definitions module has Scala sources, their `release` profiles attach a
   marker sources JAR and an empty javadoc JAR rather than the inherited
   resource-duplicating sources JAR and no javadoc artifact at all.
@@ -1126,8 +1133,54 @@ and signatures; Repofyr server-r4 tests pass against staged artifacts.
   only. Details, pinned package counts, and recorded product/package findings
   are in
   `docs/plans/onfhir-definitions-r4-integration-test-plan.md`.
-- Neither repository has been pushed, published, or committed for Phase 5A.
-  Fresh-checkout verification follows the approved commits.
+- The fresh-checkout gate found a real defect that the working copy hid
+  (2026-08-06, fixed in `4de05c6`). `core.autocrlf=true`, the Git for Windows
+  default, checks sources out as CRLF, and `R4StandardValidationTest` builds
+  its fixtures from multi-line string literals whose separators therefore come
+  from the source file. The example that strips the narrative line matched a
+  literal LF, so the replace silently matched nothing and the expected `dom-6`
+  warning never appeared. Any contributor cloning the repository on Windows
+  would have hit this. `.gitattributes` now checks every text file out as LF
+  with `* text=auto eol=lf`, which also stops the published `*-sources.jar`
+  bytes depending on the build host, and the existing `-text` entries were
+  confirmed by experiment to still win so the packaged HL7 definitions keep
+  their exact CRLF bytes. The fixtures also normalize to LF so the surgery
+  cannot silently no-op. Verified with full reactor builds from a clone forced
+  to CRLF and from a pristine clone, 703 tests green in both.
+- `onfhir-path` no longer publishes build-time files (2026-08-06, `df69adc`).
+  Its `src/main/resources` held only the ANTLR grammar, the 1.95 MB
+  `antlr-4.7-complete.jar` tool and two generated `.tokens` files, all of which
+  were packaged; the tool JAR alone was 86% of the artifact. Because a JAR
+  vendored into resources is not a declared dependency, the license gate could
+  not see it, so the Apache-2.0 release would have redistributed the ANTLR
+  tool, its runtime and StringTemplate with no NOTICE entry. All four files
+  moved to `onfhir-path/grammar/`, outside `src/`; the artifact fell from
+  2314 KB to 473 KB and now contains only classes plus `META-INF` and the
+  Maven descriptor. Removal closes the attribution gap, so NOTICE needed no new
+  entry. Recorded in the Section 7.3 migration table.
+- Repofyr builds and passes fully against the signed staging artifacts
+  (2026-08-06). With every `io.onfhir` coordinate purged from the local cache so
+  the libraries could only resolve from the signed repository, all eight server
+  modules built and their suites passed, including the 146 `onfhir-server-r4`
+  tests. Reaching that required one fix: `STU3Parser` still called `.toSet` on
+  `components` after Phase 5A changed `FHIRSearchParameter.components` from
+  `Set[String]` to `Seq[String]`, so `onfhir-server-stu3` failed to compile.
+  The earlier rehearsal missed it because it only ran `validate` plus the
+  server-r4 tests, never compiling `stu3` or `r5` against the staged libraries.
+  It was the only stale call site in Repofyr. That one-line fix is UNCOMMITTED
+  in the Repofyr working copy and should ride with Phase 5B.
+- `scripts/check-binary-compatibility.ps1` now exits 0 on success. It printed
+  its PASS verdict but left `$LASTEXITCODE` at the last MiMa invocation's
+  nonzero value, and `.github/workflows/maven.yml` runs it through
+  `shell: pwsh`, whose steps exit with `$LASTEXITCODE`. The binary-compatibility
+  job would therefore have failed on every run, including passing ones, from
+  the first push after the repository goes public.
+- Verification gate results on the committed tree: full reactor 703 tests,
+  forbidden imports PASS, dependency licenses PASS over 32 external
+  dependencies, MiMa against 3.3 PASS, staged release PASS over 14 coordinates.
+- The library repository is committed through `df69adc` plus the plan update
+  carrying this record. Neither repository has been pushed or published, and no
+  artifact has left the machine.
 
 ### Phase 5B - Repofyr Maven And Package Namespace Migration
 
@@ -1286,6 +1339,7 @@ dependency; the class keeps its `io.onfhir.validation` package.
 | all internal dependencies use `${project.version}` | library-family edges use `${onfhir.libs.version}`; server-family edges retain `${project.version}` | 4 - implemented 2026-08-03 |
 | one monorepo revision | independently versioned library and server releases | 5 |
 | each server repository embedding its own copy of the FHIR definitions ZIP and base CapabilityStatement | one resources-only artifact per FHIR release, first released in 4.0.0: `io.onfhir:onfhir-definitions-r4` packaging `definitions-r4.json.zip` plus `conformance-statement-r4.json`, and `io.onfhir:onfhir-definitions-r5` packaging `definitions-r5.json.zip` plus `conformance-statement-r5.json`, all at the default classpath locations. NO Scala binary-version suffix, because invariant 3's suffix rule applies to Scala artifacts and these contain no compiled code. Versions track the reactor; the FHIR package versions 4.0.1 and 5.0.0 are recorded in per-release `onfhir-definitions-r4.properties` / `onfhir-definitions-r5.properties`, whose names carry the release so both artifacts can share a classpath. Packaged HL7 content is CC0 1.0 and every resource is marked `-text` in `.gitattributes` so published bytes do not vary by build host | 5A - implemented 2026-08-05 |
+| `onfhir-path` packaging its ANTLR grammar, the `antlr-4.7-complete.jar` build tool, and the generated `.tokens` files as classpath resources, because all four sat in `src/main/resources` | the same four files live in `onfhir-path/grammar/`, outside `src/`, so none of them are published. The artifact drops from 2314 KB to 473 KB and carries only classes plus `META-INF` manifest/LICENSE/NOTICE and the Maven descriptor. Nothing in the library loaded them at runtime; the compiled parser is the generated Java under `src/main/java/io/onfhir/path/grammar`. A consumer that read `/FhirPathExpr.g4`, `/FhirPathExpr.tokens`, or `/FhirPathExprLexer.tokens` off the `onfhir-path` classpath must vendor its own copy. Removing the tool JAR also closes an Apache-2.0 attribution gap that the dependency license gate could not see, since a JAR inside resources is not a declared dependency | 5A - implemented 2026-08-06 |
 | R5 consumers directly constructing `R4Parser`; R4 and R5 suites co-located in `onfhir-r4` | new `io.onfhir:onfhir-r5_2.13` with `R5Parser extends R4Parser`, R5 5.0.0 primitive/complex defaults, and the relocated R5 standard-package suites. `onfhir-r4` now tests only R4 and no longer test-depends on `onfhir-definitions-r5`; `onfhir-r5` compile-depends on `onfhir-r4` and keeps definitions/config dependencies test-only | 5A - implemented 2026-08-05 |
 
 ### 7.4 Server construction contracts
@@ -1345,7 +1399,14 @@ The split is complete only when all of the following are true:
 
 ## 10. Next Action
 
-Finish Phase 5A by configuring a usable SRDC release-signing key, producing
-and verifying signed `4.0.0` staging artifacts, committing both repositories
-when authorized, and repeating the independent builds from fresh checkouts.
-Do not begin Phase 5B until those Phase 5A exit gates are green.
+Phase 5A is complete: its exit gates are green as recorded in the
+implementation record above. Begin Phase 5B, the Repofyr Maven and package
+namespace migration, in the Repofyr repository.
+
+Two items carry forward rather than blocking Phase 5A:
+
+1. The `STU3Parser` fix described above is uncommitted in the Repofyr working
+   copy. Commit it with the Phase 5B work.
+2. Nothing has been pushed or published. Publishing `4.0.0` to Maven Central
+   remains a separate, explicitly authorized step; the staging repository is
+   local only.
