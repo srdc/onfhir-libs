@@ -21,6 +21,12 @@ class FhirQueryParserEncodingTest extends Specification {
         pname = "name",
         ptype = FHIR_PARAMETER_TYPES.STRING,
         paths = Seq("name")
+      ),
+      "identifier" -> SearchParameterConf(
+        url = "http://example.org/SearchParameter/identifier",
+        pname = "identifier",
+        ptype = FHIR_PARAMETER_TYPES.TOKEN,
+        paths = Seq("identifier")
       )
     )
   )
@@ -42,6 +48,16 @@ class FhirQueryParserEncodingTest extends Specification {
 
     "reject a query whose path is not exactly one resource type" in {
       parser.parseQuery("base/Patient?name=Alice") must throwA[IllegalArgumentException]
+    }
+
+    "parse token values containing unencoded pipe characters" in {
+      //FHIR token searches use raw '|' (system|code); a strict URI parser would reject these
+      val (resourceType, parameters) =
+        parser.parseQuery("Patient?identifier=http://example.org/mrn|12345")
+
+      resourceType mustEqual "Patient"
+      parameters.map(_.name) mustEqual List("identifier")
+      parameters.head.valuePrefixList.head._2 must contain("|")
     }
   }
 }
