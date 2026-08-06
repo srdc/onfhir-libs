@@ -347,3 +347,38 @@ Run the module and its prerequisites with:
 ```shell
 mvn -pl onfhir-path -am test
 ```
+
+## Regenerating the parser
+
+The FHIRPath parser is generated from the ANTLR grammar and the generated Java
+is committed, so an ordinary build never runs ANTLR. Everything needed to
+regenerate it lives in [`grammar/`](grammar), outside `src/` so that the build
+tool and grammar are not packaged into the published artifact:
+
+| File | Role |
+|---|---|
+| `FhirPathExpr.g4` | the grammar |
+| `antlr-4.7-complete.jar` | the pinned ANTLR 4.7 tool, matching the `antlr4-runtime` dependency |
+| `FhirPathExpr.tokens`, `FhirPathExprLexer.tokens` | token files emitted by the last generation |
+
+Regenerate after editing the grammar. Run it from inside `grammar/`, because
+ANTLR copies the grammar path it is given into the header comment of every
+generated file, so running it from elsewhere rewrites line 1 of all six
+sources for no reason:
+
+```shell
+cd onfhir-path/grammar
+java -jar antlr-4.7-complete.jar -visitor -package io.onfhir.path.grammar -o ../src/main/java/io/onfhir/path/grammar FhirPathExpr.g4
+```
+
+Regenerating without editing the grammar reproduces five of the six committed
+sources byte for byte. `FhirPathExprParser.java` differs on two lines: the
+committed copy shortens ANTLR's fully qualified `org.antlr.v4.runtime.atn.ATN`
+to `ATN`, which the file's wildcard import already covers. That hand edit has
+been in the tree since long before the library split, so a regeneration
+reintroduces the long form. Both compile and behave identically; keep whichever
+form you prefer, but expect those two lines in the diff.
+
+Keep the tool version and the `antlr4-runtime` dependency version in step: the
+generated parser checks that the runtime it loads matches the tool that emitted
+it. Commit the regenerated sources together with the updated `.tokens` files.
