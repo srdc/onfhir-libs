@@ -1,4 +1,15 @@
+# Check every text file out with LF regardless of the contributor's
+# core.autocrlf setting. Without this a Windows clone gets CRLF working-tree
+# copies, which both changes the bytes of the published *-sources.jar files and
+# breaks suites whose fixtures are multi-line string literals, because their
+# line separators come from the source file itself.
+*			text=auto eol=lf
+
 *.sh		text eol=lf
+
+# Auto-detected as binary by content today; declared so a future text=auto
+# heuristic change cannot corrupt it.
+*.jar		-text
 
 # HL7 FHIR specification content packaged by the onfhir-definitions-* modules.
 # These are upstream bytes, not our source. Both conformance statements use CRLF

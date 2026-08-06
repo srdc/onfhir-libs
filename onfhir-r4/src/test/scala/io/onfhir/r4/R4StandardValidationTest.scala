@@ -25,7 +25,14 @@ class R4StandardValidationTest extends Specification {
   private val narrative =
     """"text":{"status":"generated","div":"<div xmlns='http://www.w3.org/1999/xhtml'><p>Narrative</p></div>"}"""
 
-  private val validPatient =
+  /**
+   * The fixtures below are multi-line literals, so their line separators are
+   * whatever this source file was checked out with. Normalizing to LF keeps the
+   * narrative surgery in the last example matching on a CRLF checkout.
+   */
+  private def lf(json: String): String = json.replace("\r\n", "\n")
+
+  private val validPatient = lf(
     s"""{
        |  "resourceType":"Patient",
        |  "id":"pat1",
@@ -36,9 +43,9 @@ class R4StandardValidationTest extends Specification {
        |  "gender":"male",
        |  "birthDate":"1974-12-25",
        |  "address":[{"use":"home","line":["534 Erewhon St"],"city":"PleasantVille","state":"Vic","postalCode":"3999"}]
-       |}""".stripMargin
+       |}""".stripMargin)
 
-  private val validObservation =
+  private val validObservation = lf(
     s"""{
        |  "resourceType":"Observation",
        |  "id":"obs1",
@@ -49,10 +56,10 @@ class R4StandardValidationTest extends Specification {
        |  "subject":{"reference":"Patient/pat1"},
        |  "effectiveDateTime":"2016-03-28",
        |  "valueQuantity":{"value":185,"unit":"lbs","system":"http://unitsofmeasure.org","code":"[lb_av]"}
-       |}""".stripMargin
+       |}""".stripMargin)
 
   /** The same measurement, additionally conformant to the vitalsigns profile. */
-  private val validVitalSignsObservation =
+  private val validVitalSignsObservation = lf(
     s"""{
        |  "resourceType":"Observation",
        |  "id":"obs2",
@@ -64,7 +71,7 @@ class R4StandardValidationTest extends Specification {
        |  "subject":{"reference":"Patient/pat1"},
        |  "effectiveDateTime":"2016-03-28",
        |  "valueQuantity":{"value":185,"unit":"lbs","system":"http://unitsofmeasure.org","code":"[lb_av]"}
-       |}""".stripMargin
+       |}""".stripMargin)
 
   private def validate(json: String): Seq[OutcomeIssue] =
     awaitResult(validator.validateResource(resource(json)))
