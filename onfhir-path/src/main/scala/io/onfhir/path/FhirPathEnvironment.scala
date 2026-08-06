@@ -79,8 +79,10 @@ case class FhirPathEnvironment(
       case extPattern(ext) => throw new Exception("Context like 'ext-[extension]' not implement yet!")
       //If such a environment variable is supplied
       case sv if environmentVariables.isDefinedAt(sv) => environmentVariables(sv)
-      //Otherwise check System Environment Variables
-      case oth => sys.env.get(oth).map(v => FhirPathString(v)).toSeq
+      //An unsupplied variable is empty. This deliberately does NOT fall back to
+      //the OS environment: expressions arrive from profiles, configuration and
+      //other content, so such a fallback let them read process secrets.
+      case _ => Nil
     }
   }
 }

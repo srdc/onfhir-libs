@@ -34,9 +34,13 @@ reference this file.
 
 ## onfhir-path
 
-5. FHIRPath environment variables fall through to OS environment variables
-   - `FhirPathEnvironment.getEnvironmentContext` resolves unknown `%name`
-     variables from `sys.env`. This can expose process environment values to
-     profile-supplied expressions and silently masks typos (the FHIRPath
-     spec treats undefined environment variables as errors). A fix decision
-     is pending; see the split-plan follow-ups.
+5. An undefined FHIRPath environment variable resolves to empty, not an error
+   - The FHIRPath spec treats an undefined `%name` as an error, so a typo in
+     an expression is silently empty rather than reported. Raising an error
+     instead would turn expressions that currently evaluate quietly into
+     failures, including inside profile invariants, so it is deferred rather
+     than folded into 4.0.0.
+   - The OS environment fallthrough that used to sit behind this entry is
+     fixed: `FhirPathEnvironment.getEnvironmentContext` no longer reads
+     `sys.env`, so an expression cannot resolve a process secret. Guarded by
+     `FhirPathEnvironmentVariableTest`.

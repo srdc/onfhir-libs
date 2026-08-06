@@ -127,7 +127,7 @@ Status meanings:
 | 6. Operations | Partial | Equality/equivalence, comparison, type, collection, Boolean, math, and date/time operator families are implemented and tested. Quantity comparison requires matching units; general UCUM unit conversion is not implemented. |
 | 7. Aggregates | Supported | Both `aggregate(expression)` and `aggregate(expression, init)` are implemented with `$this`, `$index`, and `$total`. |
 | 8. Lexical elements | Supported | The ANTLR grammar handles whitespace, block/line comments, escapes, identifiers, backtick identifiers, symbols, and N1 literal forms. `parseStrict` checks syntax and trailing input. |
-| 9. Environment variables | Partial | The N1 `%context` and `%ucum` values are supported. `%loinc`, `%sct`, `%resource`, caller-supplied variables, and process-environment lookup are extensions; `%resource` depends on a supplied resolver. An undefined variable returns empty instead of the N1-required error. The additional FHIR `%vs-*` and `%ext-*` forms are explicitly not implemented. |
+| 9. Environment variables | Partial | The N1 `%context` and `%ucum` values are supported. `%loinc`, `%sct`, `%resource`, and caller-supplied variables are extensions; `%resource` depends on a supplied resolver. A variable that nobody supplied resolves to empty, rather than the N1-required error; it is never read from the OS environment. The additional FHIR `%vs-*` and `%ext-*` forms are explicitly not implemented. |
 | 10. Types and reflection | Partial | `is`, `as`, and `ofType` support FHIR JSON type/choice navigation. The N1 `type()` reflection model and its `TypeInfo` structures are not implemented. |
 | 11. Type safety and strict evaluation | Runtime | Syntax can be checked with `parseStrict`; type and cardinality rules are enforced during evaluation with `FhirPathException`. There is no compile-time static type checker. |
 | 12. Formal specifications | Reference | The N1 grammar and model information are implementation references; this module uses its bundled ANTLR grammar and json4s/FHIR model adapter. |
@@ -191,6 +191,12 @@ configured.evaluateString(
 )
 // Seq("15074-8")
 ```
+
+Only `%context`, `%ucum`, `%sct`, `%loinc`, `%resource`, and the variables you
+supply here resolve to a value. Anything else is empty. In particular the OS
+environment is never consulted, because expressions routinely arrive from
+profile invariants, search parameter definitions, subscription criteria, and
+mapping templates, which the operator does not necessarily author.
 
 ### Reference resolution
 
