@@ -52,6 +52,12 @@ authorization.
 - Run the gate scripts bare and filter their output afterwards; piping them
   (`| Select-String`, `2>&1`) under Windows PowerShell 5.1 turns any native
   stderr line into a terminating NativeCommandError.
+- Quote any `-D` property whose NAME contains a dot when invoking Maven from
+  PowerShell 5.1: it splits `-Dmaven.test.skip=true` at the first dot and
+  Maven then reports `Unknown lifecycle phase ".test.skip=true"`. Write
+  `"-Dmaven.test.skip=true"`, `"-Dgpg.skip=true"`. Dotless names such as
+  `-DskipTests` and `-DaltDeploymentRepository=...` are unaffected, which is
+  why the release commands work unquoted.
 - `onfhir-client` tests need a short unix-domain-socket temp directory on
   Windows: set `JDK_JAVA_OPTIONS=-Djdk.net.unixdomain.tmpdir=C:\tmp` for
   `mvn test`, and remove the variable again before running gate scripts

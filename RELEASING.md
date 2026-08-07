@@ -57,14 +57,22 @@ roll forward as a new version, never in place.
 2. Deploy the full reactor to a file-based staging repository:
 
    ```shell
-   mvn -B -Prelease deploy -DaltDeploymentRepository=staging::default::file:///<absolute-staging-path>
+   mvn -B -Prelease deploy -DaltDeploymentRepository=staging::file:///<absolute-staging-path>
    ```
 
-   The `default::` layout segment is required. `maven-deploy-plugin` is not
-   pinned here, so Maven 3.8.6 binds version 2.7, which accepts only the
-   three-part `id::layout::url` form; the shorter `id::url` form arrived in
-   deploy-plugin 3.0 and fails with "Invalid syntax for alternative
-   repository".
+   The two-part `id::url` form and the all-or-nothing upload both come from
+   the `maven-deploy-plugin` pin in the root POM (`deploy.plugin.version`,
+   `deployAtEnd`). Do not drop the pin, and do not reintroduce a layout
+   segment - the two forms are mutually exclusive:
+
+   - Unpinned, Maven 3.8.x binds deploy plugin 2.7, which requires
+     `id::layout::url` (`staging::default::file:///...`) and uploads module
+     by module. A failure part way through the reactor then leaves a
+     partially deployed version behind, which cannot be overwritten in a
+     repository that forbids redeploy.
+   - Pinned, 3.x removed layout support and rejects that older form with
+     "Invalid legacy syntax and layout for alternative repository", so a
+     command copied from before the pin fails at the parent module.
 
 3. Verify the staging repository:
 

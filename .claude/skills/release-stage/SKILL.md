@@ -6,8 +6,10 @@ description: Stage a signed local release of the onfhir-libs reactor and verify 
 # Stage and verify a release candidate
 
 Implements RELEASING.md sections 1-3. HARD STOP at section 4: never run a
-remote `mvn deploy`, never upload to Maven Central, never `git push` -
-publishing requires explicit maintainer action outside this skill.
+`mvn deploy` against a remote repository - Maven Central or an internal one
+such as the SRDC Nexus - and never `git push`. Publishing requires explicit
+maintainer action outside this skill; only the local file-based staging
+below is in scope.
 
 ## 1. Pre-flight
 
@@ -21,19 +23,28 @@ publishing requires explicit maintainer action outside this skill.
 ## 2. Stage signed artifacts
 
 ```
-mvn -B -Prelease deploy -DaltDeploymentRepository=staging::default::file:///<absolute-staging-path>
+mvn -B -Prelease deploy -DaltDeploymentRepository=staging::file:///<absolute-staging-path>
 ```
 
 - The target is a LOCAL file-based repository (e.g. under `C:\tmp`); this
   is not a publish.
-- Keep the `default::` layout segment: `maven-deploy-plugin` is unpinned,
-  so Maven 3.8.6 binds 2.7, which rejects the two-part `id::url` form with
-  "Invalid syntax for alternative repository".
+- The two-part `id::url` form is valid only because the root POM pins
+  `maven-deploy-plugin` to 3.x (`deploy.plugin.version`); Maven 3.8.6 would
+  otherwise bind 2.7, which requires `id::layout::url`. Do NOT "fix" a
+  failure here by adding a `default::` segment - 3.x rejects that with
+  "Invalid legacy syntax and layout for alternative repository". If the
+  command fails on syntax, the pin is missing; restore the pin rather than
+  the layout segment.
+- The same pin sets `deployAtEnd`, so a reactor failure cannot leave a
+  partially deployed version behind.
 - Signing requires the SRDC release GPG key on this machine; headless
   signing works via loopback pinentry. If GPG prompts or fails, stop and
   report - do not disable signing to get a green run (an unsigned
   rehearsal is only useful if the maintainer asked for one, via
-  `-Dgpg.skip=true` and `check-staged-release.ps1 -SkipSignatures`).
+  `"-Dgpg.skip=true"` and `check-staged-release.ps1 -SkipSignatures`).
+- Quote dotted `-D` names under PowerShell 5.1 (`"-Dgpg.skip=true"`);
+  unquoted, the shell splits at the first dot and Maven fails with
+  `Unknown lifecycle phase ".skip=true"`.
 
 ## 3. Verify the staging repository
 
