@@ -57,8 +57,14 @@ roll forward as a new version, never in place.
 2. Deploy the full reactor to a file-based staging repository:
 
    ```shell
-   mvn -B -Prelease deploy -DaltDeploymentRepository=staging::file:///<absolute-staging-path>
+   mvn -B -Prelease deploy -DaltDeploymentRepository=staging::default::file:///<absolute-staging-path>
    ```
+
+   The `default::` layout segment is required. `maven-deploy-plugin` is not
+   pinned here, so Maven 3.8.6 binds version 2.7, which accepts only the
+   three-part `id::layout::url` form; the shorter `id::url` form arrived in
+   deploy-plugin 3.0 and fails with "Invalid syntax for alternative
+   repository".
 
 3. Verify the staging repository:
 

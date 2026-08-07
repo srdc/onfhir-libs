@@ -21,11 +21,14 @@ publishing requires explicit maintainer action outside this skill.
 ## 2. Stage signed artifacts
 
 ```
-mvn -B -Prelease deploy -DaltDeploymentRepository=staging::file:///<absolute-staging-path>
+mvn -B -Prelease deploy -DaltDeploymentRepository=staging::default::file:///<absolute-staging-path>
 ```
 
 - The target is a LOCAL file-based repository (e.g. under `C:\tmp`); this
   is not a publish.
+- Keep the `default::` layout segment: `maven-deploy-plugin` is unpinned,
+  so Maven 3.8.6 binds 2.7, which rejects the two-part `id::url` form with
+  "Invalid syntax for alternative repository".
 - Signing requires the SRDC release GPG key on this machine; headless
   signing works via loopback pinentry. If GPG prompts or fails, stop and
   report - do not disable signing to get a green run (an unsigned
