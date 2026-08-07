@@ -56,3 +56,27 @@ jobs:
         run: mvn -B test
       - name: Release attachments without signing
         run: mvn -B -Prelease -Dgpg.skip=true package
+
+  # Windows checkout exercises the .gitattributes line-ending contract (a
+  # CRLF checkout once turned multi-line test fixtures into silent no-ops)
+  # and keeps the PowerShell gate scripts working on Windows.
+  test-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+          cache: maven
+      - name: Short unix-domain-socket temp dir for client tests
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force -Path C:\tmp | Out-Null
+      - name: Full library reactor
+        run: mvn -B test
+        env:
+          JDK_JAVA_OPTIONS: -Djdk.net.unixdomain.tmpdir=C:\tmp
+      - name: Source and resource boundary
+        shell: pwsh
+        run: ./scripts/check-forbidden-imports.ps1

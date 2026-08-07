@@ -1,21 +1,21 @@
 # ADR 0001: Transport-Neutral HTTP Contract
 
 - Status: Accepted
-- Date: 2026-07-31
-- Phase 2A ratification: approved 2026-08-03
+- Date: 2026-07-31 (ratified 2026-08-03)
 - Decision owners: onFHIR / Repofyr maintainers
 - Applies to: library-family public and internal HTTP-facing models
 
 ## Context
 
-The reusable onFHIR libraries expose Akka HTTP types in public signatures and
-internal models. The library repository must become Akka/Pekko-free without
-losing HTTP semantics such as duplicate query parameters, weak entity tags,
-unknown status codes, or repeated headers.
+Until 4.0.0 the reusable onFHIR libraries exposed Akka HTTP types in public
+signatures and internal models. The library repository had to become
+Akka/Pekko-free without losing HTTP semantics such as duplicate query
+parameters, weak entity tags, unknown status codes, or repeated headers.
 
-Replacing rich Akka types with raw strings, integers, or maps would make the
-dependency graph clean while silently weakening the API. The neutral contract
-therefore has to be fixed before Phase 2 substitutes types.
+Replacing rich Akka types with raw strings, integers, or maps would have made
+the dependency graph clean while silently weakening the API. The neutral
+contract was therefore fixed before any type was substituted, and it remains
+the normative specification for these models.
 
 ## Decision
 
@@ -113,7 +113,8 @@ in-memory representation, not a shared wire format.
 
 ## Compatibility Requirements
 
-Before replacing any Akka type, characterization and contract tests must cover:
+Before an Akka type was replaced, characterization and contract tests had to
+cover (and the committed suites still pin):
 
 - raw and encoded URI round trips;
 - duplicate, ordered, missing, and empty query values;
@@ -126,14 +127,15 @@ Before replacing any Akka type, characterization and contract tests must cover:
 - multi-hop forwarded values;
 - case-insensitive repeated headers.
 
-Server adapters translate these models to and from Akka HTTP. Akka types must
-not cross back into a library signature.
+The Repofyr server translates these models to and from its own transport.
+Transport types must not cross back into a library signature.
 
 ## Consequences
 
-- The library API remains semantically rich while becoming transport-neutral.
-- Some public signatures intentionally break and require the major-version
-  migration entries already listed in the split plan.
+- The library API remains semantically rich while being transport-neutral.
+- Some public signatures intentionally broke; the consumer-facing entries are
+  recorded in the [3.x to 4.0.0 migration guide](../migration/3.x-to-4.0.0.md).
 - URI and header adapters require more care than simple string conversion.
-- The same models can support the JDK HTTP client in Phase 3 and other future
-  transports without adding another public API migration.
+- The same models support the JDK HTTP client that `onfhir-client` now uses,
+  and can support other future transports without another public API
+  migration.

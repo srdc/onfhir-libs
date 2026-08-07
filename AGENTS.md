@@ -14,13 +14,19 @@ Repofyr repository.
 
 - Keep production source, resources, direct dependencies, and resolved
   dependency graphs free of Akka and Pekko.
-- Keep existing `io.onfhir` group IDs, artifact IDs, and package roots stable,
-  except for the approved pre-release correction to
-  `io.onfhir:onfhir-template-engine_2.13` recorded in the split plan.
+- Keep existing `io.onfhir` group IDs, artifact IDs, and package roots stable.
+  (The pre-4.0.0 correction of `io.onfhir:onfhir-template-engine_2.13` is
+  recorded in the migration guide.)
 - Do not introduce HTTP routing, server lifecycle, persistence, or actor event
   bus concerns into these modules.
-- Record public API changes and module relocations in
-  `docs/plans/library-server-split-plan-v2.md`.
+- Record user-visible changes in `CHANGELOG.md`. A binary-incompatible change
+  or class relocation additionally needs, in the same change, a row in the
+  migration guide under `docs/migration/` and a reconciled MiMa baseline under
+  `docs/compatibility/` (see the `mima-update` skill). Binary breaks land only
+  in a major release.
+- The neutral HTTP model's semantic contract is
+  `docs/adr/0001-neutral-http-contract.md`; do not weaken it (for example,
+  collapsing ordered/repeated values into maps).
 - Keep scripts ASCII-only for Windows PowerShell 5.1 compatibility.
 
 ## Verification
@@ -30,8 +36,31 @@ Repofyr repository.
 - `powershell -File scripts/check-library-dependency-licenses.ps1`
 - `powershell -File scripts/check-binary-compatibility.ps1`
 
+The `verify` skill runs the full suite in order. Release staging and
+publishing follow `RELEASING.md`; do not publish or push without explicit
+authorization.
+
+## Local build notes
+
+- This repository may be worked on by parallel sessions: check `git log`
+  before assuming the state of the tree.
+- Module-scoped builds need `-am` while the working tree is ahead of
+  installed artifacts: `mvn -pl <module> -am test`.
+- A killed Maven run can corrupt zinc incremental state under `target/`,
+  producing bogus "not a member of package" errors; run
+  `mvn -pl <module> clean` and rebuild.
+- Run the gate scripts bare and filter their output afterwards; piping them
+  (`| Select-String`, `2>&1`) under Windows PowerShell 5.1 turns any native
+  stderr line into a terminating NativeCommandError.
+- `onfhir-client` tests need a short unix-domain-socket temp directory on
+  Windows: set `JDK_JAVA_OPTIONS=-Djdk.net.unixdomain.tmpdir=C:\tmp` for
+  `mvn test`, and remove the variable again before running gate scripts
+  under PowerShell 5.1.
+
+## Licensing
+
 Release artifacts use Apache-2.0 and must package `META-INF/LICENSE` and
-`META-INF/NOTICE`. Do not publish or push without explicit authorization.
+`META-INF/NOTICE`.
 
 The `onfhir-definitions-*` artifacts are the only ones whose packaged content is
 not first-party: the HL7 FHIR specification files they carry are CC0 1.0,

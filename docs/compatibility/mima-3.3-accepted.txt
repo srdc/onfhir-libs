@@ -1,6 +1,6 @@
 # MiMa accepted compatibility report
 # Baseline: io.onfhir reusable artifacts 3.3
-# Every reported break must have a corresponding migration-table entry.
+# Every reported break must have a corresponding migration-guide entry.
 # Reconciliation: docs/compatibility/mima-3.3-reconciliation.md
 
 ## onfhir-common_2.13

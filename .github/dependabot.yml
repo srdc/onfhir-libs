@@ -1,0 +1,14 @@
+version: 2
+updates:
+  # Dependency bumps are reviewed by the existing gates: the license
+  # allow-list catches license changes, MiMa catches binary breaks, and the
+  # forbidden-imports scan catches transitive Akka/Pekko.
+  - package-ecosystem: maven
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly

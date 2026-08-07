@@ -79,8 +79,18 @@ artifacts. Activating it does not publish to Maven Central.
 
 Version 4.0.0 intentionally contains major API changes and module moves from
 the 3.x monorepo line. See the
-[migration plan](docs/plans/library-server-split-plan-v2.md) and
+[migration guide](docs/migration/3.x-to-4.0.0.md), the
+[changelog](CHANGELOG.md), and the
 [MiMa reconciliation](docs/compatibility/mima-3.3-reconciliation.md).
+
+All coordinates release together at one version. Within a major line, minors
+are additive and backward binary-compatible and patches are fixes only;
+binary-incompatible changes occur only in a major release, enforced by a
+binary-compatibility gate on every build.
+The onFHIR server continues separately as Repofyr under `io.repofyr`
+coordinates (GPL-3.0).
+
+To report a vulnerability, see [SECURITY.md](SECURITY.md).
 
 Copyright 2019-2026 SRDC Corp. and contributors. Licensed under the
 [Apache License 2.0](LICENSE).

@@ -1,6 +1,6 @@
 # Compares current reusable artifacts with the last public 3.3 release using
 # MiMa CLI. The committed baseline represents intentional breaks reconciled
-# with the migration table. ASCII-only for Windows PowerShell 5.1.
+# with the migration guide. ASCII-only for Windows PowerShell 5.1.
 
 param(
     [string]$PreviousVersion = "3.3",
@@ -49,7 +49,7 @@ try {
     $reportLines = @(
         "# MiMa accepted compatibility report",
         "# Baseline: io.onfhir reusable artifacts $PreviousVersion",
-        "# Every reported break must have a corresponding migration-table entry.",
+        "# Every reported break must have a corresponding migration-guide entry.",
         "# Reconciliation: docs/compatibility/mima-3.3-reconciliation.md",
         ""
     )
@@ -126,7 +126,7 @@ if ($reportNormalized -ne $expectedNormalized) {
     Write-Output "MiMa report differs from the accepted baseline."
     Compare-Object ($expectedNormalized -split "`n") ($reportNormalized -split "`n") |
         ForEach-Object { Write-Output ("  {0} {1}" -f $_.SideIndicator, $_.InputObject) }
-    Write-Output "Run with -UpdateBaseline only after reconciling changes with the migration table."
+    Write-Output "Run with -UpdateBaseline only after reconciling changes with the migration guide."
     exit 1
 }
 Write-Output "check-binary-compatibility: PASS"

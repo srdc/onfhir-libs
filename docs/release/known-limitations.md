@@ -1,9 +1,8 @@
-# Known Limitations To Convert Into GitHub Issues After Publishing
+# Known limitations
 
-These are deliberate, documented gaps in the 4.0.0 libraries. Each entry
-should become a GitHub issue once `srdc/onfhir-libs` is public, so they are
-tracked openly instead of living only in code comments. Source comments
-reference this file.
+Deliberate, documented gaps in the 4.0.0 libraries. Each entry is tracked as
+a GitHub issue once the repository is public (see `RELEASING.md`,
+post-publish steps); source comments reference this file.
 
 ## onfhir-validation
 
@@ -44,3 +43,13 @@ reference this file.
      fixed: `FhirPathEnvironment.getEnvironmentContext` no longer reads
      `sys.env`, so an expression cannot resolve a process secret. Guarded by
      `FhirPathEnvironmentVariableTest`.
+
+## onfhir-client
+
+6. Unresolved identifiers are not cached by `IdentityServiceClient`
+   - `findMatching` only calls `cache.storeIdentity` for a resolved id, so
+     every unresolved identifier re-queries the FHIR server on each call.
+     Deliberate: caching misses would need an `IFhirIdentityCache` API
+     change, and a miss may legitimately become a hit later. Pinned by
+     `IdentityServiceClientContractTest` ("not store anything when the
+     identity cannot be resolved").

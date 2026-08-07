@@ -5,9 +5,9 @@ Evidence captured: 2026-08-03
 Target repository: `srdc/onfhir-libs`
 Proposed license after approval: Apache License 2.0
 
-This record covers the original nine reusable modules only. The current
-monorepo and Repofyr server repository remain GPL-3.0. No license file may be
-replaced until the decision owner records approval here.
+This record covers the original nine reusable modules extracted from the
+onFHIR monorepo; the Repofyr server repository remains GPL-3.0. The approval
+below was recorded before any license file was replaced.
 
 ## Contributor evidence
 
@@ -55,9 +55,9 @@ Confidential employment agreements are intentionally not committed here.
 - Approved for Apache-2.0 extraction: **yes**
 - Approval date: **2026-08-03**
 
-This approval unblocks Phase 5 extraction and relicensing of the nine library
-modules. It does not authorize changing the GPL-3.0 license of this monorepo or
-the Repofyr server repository.
+This approval authorized the extraction and Apache-2.0 relicensing of the
+library modules in this repository. It does not extend to the Repofyr server
+repository, which remains GPL-3.0.
 
 ## Per-file source header decision
 

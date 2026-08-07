@@ -93,7 +93,21 @@
         <scala.version>2.13.16</scala.version>
         <scala.binary.version>2.13</scala.binary.version>
         <scala.pcombinators>2.4.0</scala.pcombinators>
+        <!-- Pinned to the json4s version Apache Spark 3.5.x bundles. json4s
+             types are part of this library's public API (io.onfhir.api.Resource
+             is a json4s JObject), and Spark consumers such as spark-on-fhir
+             would hit a classpath conflict on any other line. Do not bump
+             without a matching Spark version change. -->
         <json4s.version>3.7.0-M11</json4s.version>
+        <!-- json4s 3.7.0-M11 resolves jackson-databind 2.12.2 transitively,
+             which is affected by CVE-2020-36518 (deeply nested JSON exhausts
+             the stack) - reachable here because these libraries parse
+             untrusted FHIR JSON. Overridden to the version Spark 3.5.x
+             bundles, which spark-on-fhir also declares, so the pin closes the
+             CVE and matches the Spark classpath instead of fighting it.
+             json4s only needs a compatible Jackson 2.x, so this is
+             independent of the json4s pin above. -->
+        <jackson.version>2.15.2</jackson.version>
         <scala.xml.version>2.2.0</scala.xml.version>
         <slf4j.version>2.0.18</slf4j.version>
         <config.version>1.4.3</config.version>
@@ -360,6 +374,15 @@
                 <groupId>org.json4s</groupId>
                 <artifactId>json4s-xml_${scala.binary.version}</artifactId>
                 <version>${json4s.version}</version>
+            </dependency>
+            <!-- Imported so every Jackson artifact json4s pulls in resolves at
+                 one coherent version. See the jackson.version property. -->
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>org.scala-lang.modules</groupId>

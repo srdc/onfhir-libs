@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn -B test:*)",
+      "Bash(mvn test:*)",
+      "Bash(mvn clean test:*)",
+      "Bash(mvn -B validate:*)",
+      "Bash(mvn validate:*)",
+      "Bash(mvn -B package:*)",
+      "Bash(mvn -B -pl:*)",
+      "Bash(mvn -pl:*)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(git ls-files:*)",
+      "Bash(powershell -File scripts/check-forbidden-imports.ps1:*)",
+      "Bash(powershell -File scripts/check-library-dependency-licenses.ps1:*)",
+      "Bash(powershell -File scripts/check-binary-compatibility.ps1)",
+      "Bash(powershell -File scripts/check-binary-compatibility.ps1 -SkipBuild)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(powershell -File scripts/check-binary-compatibility.ps1 -UpdateBaseline:*)"
+    ],
+    "deny": [
+      "Bash(mvn deploy:*)",
+      "Bash(mvn -B deploy:*)",
+      "Bash(mvn release:*)",
+      "Bash(mvn nexus-staging:*)",
+      "Bash(mvn org.sonatype.central:*)"
+    ]
+  }
+}
