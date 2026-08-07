@@ -56,6 +56,40 @@ The enumerations parse and render their FHIR wire codes through `fromCode` and
 `code`, and reject unknown values, so header and parameter handling does not
 rely on loose strings.
 
+`FhirCapabilityDefaults`, `FhirResultDefaults`, `FhirRequestDefaults`, and
+`FhirSubscriptionSettings` can also be built from a `com.typesafe.config.Config`.
+Each `fromConfig` takes the subtree it reads - the caller owns the absolute key
+path, and the library never loads global configuration itself:
+
+```scala
+import com.typesafe.config.ConfigFactory
+import io.onfhir.config.{FhirCapabilityDefaults, FhirRequestDefaults, FhirResultDefaults}
+
+val config = ConfigFactory.load()
+val capabilities = FhirCapabilityDefaults.fromConfig(config.getConfig("fhir.default"))
+val results = FhirResultDefaults.fromConfig(config.getConfig("fhir.default"))
+val requests = FhirRequestDefaults.fromConfig(config.getConfig("fhir.default"))
+```
+
+with the keys named relative to the subtree:
+
+```hocon
+fhir.default {
+  versioning = versioned          # read-history, update-create,
+  conditional-read = full-support # conditional-create/-update/-delete
+  page-count = 20                 # pagination, search-total
+  search-handling = strict        # return-preference
+}
+```
+
+Every key is optional and falls back to the type's `Standard` preset, so an
+empty subtree yields exactly `Standard`; an unknown value fails at construction
+with an `InitializationException` naming the allowed ones. No module ships a
+`reference.conf`, so nothing is merged into a consumer's `ConfigFactory.load()`.
+`search-handling` and `return-preference` accept either the bare token
+(`strict`, canonical in configuration) or the full header code
+(`handling=strict`).
+
 ## Working with FHIR JSON
 
 `JsonFormatter` supplies the json4s formats and parsing/serialization helpers

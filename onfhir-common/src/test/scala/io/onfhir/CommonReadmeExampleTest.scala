@@ -1,8 +1,9 @@
 package io.onfhir
 
+import com.typesafe.config.ConfigFactory
 import io.onfhir.api.Resource
 import io.onfhir.api.util.FHIRUtil
-import io.onfhir.config.{FhirEndpointSettings, FhirPaginationMode, FhirResultDefaults, FhirSearchHandling, FhirSearchTotalHandling}
+import io.onfhir.config.{FhirCapabilityDefaults, FhirConditionalReadSupport, FhirEndpointSettings, FhirPaginationMode, FhirRequestDefaults, FhirResultDefaults, FhirSearchHandling, FhirSearchTotalHandling, FhirVersioningPolicy}
 import io.onfhir.util.JsonFormatter._
 import org.junit.runner.RunWith
 import org.specs2.mutable.Specification
@@ -27,6 +28,35 @@ class CommonReadmeExampleTest extends Specification {
       handling.code mustEqual "handling=strict"
       results.defaultPageSize mustEqual 20
       FhirSearchHandling.fromCode(handling.code) mustEqual FhirSearchHandling.Strict
+    }
+  }
+
+  "the config-driven construction example" should {
+    "build the documented settings from the documented subtree" in {
+      // ConfigFactory.load() in the README; parsed here so the example does not
+      // depend on the test classpath carrying an application.conf
+      val config = ConfigFactory.parseString(
+        """
+          |fhir.default {
+          |  versioning = versioned
+          |  conditional-read = full-support
+          |  page-count = 20
+          |  search-handling = strict
+          |}
+        """.stripMargin)
+      val capabilities = FhirCapabilityDefaults.fromConfig(config.getConfig("fhir.default"))
+      val results = FhirResultDefaults.fromConfig(config.getConfig("fhir.default"))
+      val requests = FhirRequestDefaults.fromConfig(config.getConfig("fhir.default"))
+
+      capabilities.versioning mustEqual FhirVersioningPolicy.Versioned
+      capabilities.conditionalRead mustEqual FhirConditionalReadSupport.FullSupport
+      results.defaultPageSize mustEqual 20
+      requests.searchHandling mustEqual FhirSearchHandling.Strict
+
+      // keys absent from the subtree fall back to the Standard preset
+      results.paginationMode mustEqual FhirResultDefaults.Standard.paginationMode
+      requests.returnPreference mustEqual FhirRequestDefaults.Standard.returnPreference
+      FhirCapabilityDefaults.fromConfig(ConfigFactory.empty()) mustEqual FhirCapabilityDefaults.Standard
     }
   }
 

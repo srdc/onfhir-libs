@@ -1,6 +1,9 @@
 package io.onfhir.config
 
+import com.typesafe.config.Config
 import io.onfhir.exception.InitializationException
+
+import scala.jdk.CollectionConverters._
 
 /** Library-safe endpoint settings. The URL is intentionally kept as a String until Phase 2. */
 final case class FhirEndpointSettings(rootUrl: String) {
@@ -12,6 +15,30 @@ final case class FhirRequestDefaults(
     searchHandling: FhirSearchHandling,
     returnPreference: FhirReturnPreference)
 
+object FhirRequestDefaults {
+  val Standard: FhirRequestDefaults = FhirRequestDefaults(
+    FhirSearchHandling.Strict,
+    FhirReturnPreference.Representation)
+
+  /**
+   * Build the request defaults from the `fhir.default` subtree.
+   *
+   * Reads the relative keys `search-handling` and `return-preference`. Both are optional and
+   * fall back to [[Standard]]. Values may be written either as the bare token (`strict`,
+   * `representation`, canonical in configuration) or as the full header code
+   * (`handling=strict`, `return=representation`).
+   *
+   * @param config the already-scoped `fhir.default` subtree
+   */
+  def fromConfig(config: Config): FhirRequestDefaults = FhirRequestDefaults(
+    searchHandling =
+      if (config.hasPath("search-handling")) FhirSearchHandling.fromConfigValue(config.getString("search-handling"))
+      else Standard.searchHandling,
+    returnPreference =
+      if (config.hasPath("return-preference")) FhirReturnPreference.fromConfigValue(config.getString("return-preference"))
+      else Standard.returnPreference)
+}
+
 final case class FhirResultDefaults(
     defaultPageSize: Int,
     paginationMode: FhirPaginationMode,
@@ -20,9 +47,58 @@ final case class FhirResultDefaults(
     throw new InitializationException("FHIR default page size cannot be negative")
 }
 
+object FhirResultDefaults {
+  val Standard: FhirResultDefaults = FhirResultDefaults(
+    defaultPageSize = 50,
+    FhirPaginationMode.Page,
+    FhirSearchTotalHandling.Accurate)
+
+  /**
+   * Build the result defaults from the `fhir.default` subtree.
+   *
+   * Reads the relative keys `page-count`, `pagination` and `search-total`. All are optional and
+   * fall back to [[Standard]].
+   *
+   * @param config the already-scoped `fhir.default` subtree
+   */
+  def fromConfig(config: Config): FhirResultDefaults = FhirResultDefaults(
+    defaultPageSize =
+      if (config.hasPath("page-count")) config.getInt("page-count")
+      else Standard.defaultPageSize,
+    paginationMode =
+      if (config.hasPath("pagination")) FhirPaginationMode.fromCode(config.getString("pagination"))
+      else Standard.paginationMode,
+    totalHandling =
+      if (config.hasPath("search-total")) FhirSearchTotalHandling.fromCode(config.getString("search-total"))
+      else Standard.totalHandling)
+}
+
 final case class FhirSubscriptionSettings(
     active: Boolean,
     allowedResources: Option[Set[String]])
+
+object FhirSubscriptionSettings {
+  val Standard: FhirSubscriptionSettings = FhirSubscriptionSettings(
+    active = false,
+    allowedResources = None)
+
+  /**
+   * Build the subscription settings from the `fhir.subscription` subtree.
+   *
+   * Reads the relative keys `active` and `allowed-resources`. Both are optional and fall back to
+   * [[Standard]]. An absent `allowed-resources` is `None`, which means "no restriction" and is
+   * not the same as a configured empty list.
+   *
+   * @param config the already-scoped `fhir.subscription` subtree
+   */
+  def fromConfig(config: Config): FhirSubscriptionSettings = FhirSubscriptionSettings(
+    active =
+      if (config.hasPath("active")) config.getBoolean("active")
+      else Standard.active,
+    allowedResources =
+      if (config.hasPath("allowed-resources")) Some(config.getStringList("allowed-resources").asScala.toSet)
+      else Standard.allowedResources)
+}
 
 final case class FhirCapabilityDefaults(
     versioning: FhirVersioningPolicy,
@@ -42,6 +118,38 @@ object FhirCapabilityDefaults {
     FhirConditionalReadSupport.FullSupport,
     conditionalUpdate = false,
     FhirConditionalDeleteSupport.NotSupported)
+
+  /**
+   * Build the capability defaults from the `fhir.default` subtree.
+   *
+   * Reads the relative keys `versioning`, `read-history`, `update-create`, `conditional-create`,
+   * `conditional-read`, `conditional-update` and `conditional-delete`. All are optional and fall
+   * back to [[Standard]].
+   *
+   * @param config the already-scoped `fhir.default` subtree
+   */
+  def fromConfig(config: Config): FhirCapabilityDefaults = FhirCapabilityDefaults(
+    versioning =
+      if (config.hasPath("versioning")) FhirVersioningPolicy.fromCode(config.getString("versioning"))
+      else Standard.versioning,
+    readHistory =
+      if (config.hasPath("read-history")) config.getBoolean("read-history")
+      else Standard.readHistory,
+    updateCreate =
+      if (config.hasPath("update-create")) config.getBoolean("update-create")
+      else Standard.updateCreate,
+    conditionalCreate =
+      if (config.hasPath("conditional-create")) config.getBoolean("conditional-create")
+      else Standard.conditionalCreate,
+    conditionalRead =
+      if (config.hasPath("conditional-read")) FhirConditionalReadSupport.fromCode(config.getString("conditional-read"))
+      else Standard.conditionalRead,
+    conditionalUpdate =
+      if (config.hasPath("conditional-update")) config.getBoolean("conditional-update")
+      else Standard.conditionalUpdate,
+    conditionalDelete =
+      if (config.hasPath("conditional-delete")) FhirConditionalDeleteSupport.fromCode(config.getString("conditional-delete"))
+      else Standard.conditionalDelete)
 }
 
 sealed trait FhirSearchHandling { def code: String }
@@ -54,6 +162,13 @@ object FhirSearchHandling {
     case Lenient.code => Lenient
     case other => FhirRuntimeSettingsValidation.invalid("FHIR search handling", other, Seq(Strict.code, Lenient.code))
   }
+
+  /**
+   * Accepts the bare token ("strict") or the full header code ("handling=strict").
+   * The bare token is canonical in configuration; [[fromCode]] stays strict for the header form.
+   */
+  def fromConfigValue(value: String): FhirSearchHandling =
+    fromCode(if (value.startsWith("handling=")) value else s"handling=$value")
 }
 
 sealed trait FhirReturnPreference { def code: String }
@@ -68,6 +183,13 @@ object FhirReturnPreference {
     case OperationOutcome.code => OperationOutcome
     case other => FhirRuntimeSettingsValidation.invalid("FHIR return preference", other, Seq(Minimal.code, Representation.code, OperationOutcome.code))
   }
+
+  /**
+   * Accepts the bare token ("representation") or the full header code ("return=representation").
+   * The bare token is canonical in configuration; [[fromCode]] stays strict for the header form.
+   */
+  def fromConfigValue(value: String): FhirReturnPreference =
+    fromCode(if (value.startsWith("return=")) value else s"return=$value")
 }
 
 sealed trait FhirPaginationMode { def code: String }

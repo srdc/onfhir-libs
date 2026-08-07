@@ -69,6 +69,11 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
+        <!-- Configuration model used by the typed runtime settings' fromConfig -->
+        <dependency>
+            <groupId>com.typesafe</groupId>
+            <artifactId>config</artifactId>
+        </dependency>
         <!--IO Utilities-->
         <dependency>
             <groupId>org.apache.commons</groupId>

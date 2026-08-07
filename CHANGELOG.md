@@ -37,6 +37,18 @@ upgrade path from 3.x is in the
   and `onfhir-definitions-stu3` packaging the HL7 FHIR standard definitions
   (CC0 1.0) with release-qualified file names.
 - `onfhir-libs-bom` for version-aligned multi-module consumption.
+- Config-driven construction for the typed runtime settings:
+  `FhirCapabilityDefaults`, `FhirResultDefaults`, `FhirRequestDefaults`, and
+  `FhirSubscriptionSettings` gain `Standard` presets and `fromConfig`
+  companions. Each takes an already-scoped `com.typesafe.config.Config`
+  subtree (`fhir.default`, `fhir.subscription`) and reads relative keys; every
+  key is optional and falls back to `Standard`. No `reference.conf` is
+  shipped, so the artifacts reserve no key paths in a consumer's
+  configuration. In configuration, `search-handling` and `return-preference`
+  accept the bare token (`strict`, `representation`) as well as the full
+  header code; `fromCode` remains strict for the header form.
+- `onfhir-common_2.13` declares `com.typesafe:config` (Apache-2.0), the
+  configuration model in the `fromConfig` signatures.
 
 ### Changed
 
