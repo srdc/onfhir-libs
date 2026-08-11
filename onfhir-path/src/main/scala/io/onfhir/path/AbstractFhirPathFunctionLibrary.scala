@@ -5,14 +5,21 @@ import io.onfhir.path.grammar.FhirPathExprParser.ExpressionContext
 
 import java.lang.reflect.InvocationTargetException
 import io.onfhir.path.annotation.{FhirPathFunction, FhirPathFunctionDocumentation, FhirPathFunctionParameter, FhirPathFunctionReturn}
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.reflect.runtime.currentMirror
 import scala.reflect.runtime.universe._
+
+object AbstractFhirPathFunctionLibrary {
+  private val logger: Logger = LoggerFactory.getLogger(classOf[AbstractFhirPathFunctionLibrary])
+}
 
 /**
  * Abstract class to implement for external function libraries
  */
 abstract class AbstractFhirPathFunctionLibrary {
+  import AbstractFhirPathFunctionLibrary.logger
+
   /**
    * Return function signatures (name and number of parameters)
    * @return
@@ -52,8 +59,6 @@ abstract class AbstractFhirPathFunctionLibrary {
    * @return a list of FhirPathFunction representing the documentation of functions
    * */
   def getFunctionDocumentation():Seq[FhirPathFunction] = {
-    var currentFunctionDocumentationField: FhirPathFunctionDocumentation = null
-
     // Using reflection to inspect the methods annotated with @FhirPathFunction
     currentMirror.classSymbol(Class.forName(getClass.getName))
       .toType
@@ -63,39 +68,70 @@ abstract class AbstractFhirPathFunctionLibrary {
         symbol.isMethod && symbol.annotations.exists(_.tree.tpe =:= typeOf[FhirPathFunction])
       })
       .map(method => {
-        // retrieve annotation fields
+        // retrieve the annotation arguments; they are given in the declaration order of FhirPathFunction
         val annotationFields = method.annotations
           .find(_.tree.tpe =:= typeOf[FhirPathFunction]).head
           .tree.children.tail
-          .collect({
-            // Extract documentation details from the annotation
-            case field if field.tpe.toString.contentEquals("io.onfhir.path.annotation.FhirPathFunctionDocumentation") =>
-              currentFunctionDocumentationField = getFhirPathDocumentation(field);
-
-            // matches 'String' fields
-            case Literal(Constant(s: String)) => s
-
-            // matches 'Seq[String]' fields
-            case Apply(_: Tree, args: List[Tree]) =>
-              args.collect({
-                // matches 'String's in the sequence
-                case Literal(Constant(s: String)) => s
-
-                case rest =>
-                  // matches 'FHIR_DATA_TYPES' and 'FHIR_PARAMETER_TYPES' fields
-                  getFhirDataTypeValue(rest.toString())
-              })
-          })
         // create an instance of FhirPathFunction
-        new FhirPathFunction(documentation = currentFunctionDocumentationField,
-          insertText = annotationFields.lift(1).get.toString,
-          detail = annotationFields.lift(2).get.toString,
-          label = annotationFields.lift(3).get.toString,
-          kind = annotationFields.lift(4).get.toString,
-          returnType = annotationFields.lift(5).get.asInstanceOf[Seq[String]],
-          inputType = annotationFields.lift(6).get.asInstanceOf[Seq[String]])
+        new FhirPathFunction(
+          // extract documentation details from the annotation
+          documentation = annotationFields
+            .find(_.tpe.toString.contentEquals("io.onfhir.path.annotation.FhirPathFunctionDocumentation"))
+            .map(getFhirPathDocumentation)
+            .orNull,
+          insertText = readStringField(annotationFields, 1),
+          detail = readStringField(annotationFields, 2),
+          label = readStringField(annotationFields, 3),
+          kind = readStringField(annotationFields, 4),
+          returnType = readStringSeqField(annotationFields, 5, method.fullName),
+          inputType = readStringSeqField(annotationFields, 6, method.fullName))
       }).toSeq
   }
+
+  /**
+   * Reads a 'String' argument of a FhirPathFunction annotation.
+   *
+   * @param annotationFields The arguments of the annotation, in the declaration order of FhirPathFunction
+   * @param index            Index of the argument to read
+   * @return The value of the argument, or an empty string if it is missing
+   */
+  private def readStringField(annotationFields: List[Tree], index: Int): String =
+    annotationFields.lift(index) match {
+      // matches 'String' fields
+      case Some(Literal(Constant(s: String))) => s
+      // a non-literal field, keep its source representation as we cannot evaluate it
+      case Some(other) => other.toString()
+      case None => ""
+    }
+
+  /**
+   * Reads a 'Seq[String]' argument of a FhirPathFunction annotation. Elements given as string literals are taken as
+   * they are whereas the ones referring to a FHIR_DATA_TYPES/FHIR_PARAMETER_TYPES constant are resolved to their
+   * values. An element that can be neither read nor resolved is dropped after being logged, because it cannot
+   * contribute a meaningful type name to the documentation.
+   *
+   * @param annotationFields The arguments of the annotation, in the declaration order of FhirPathFunction
+   * @param index            Index of the argument to read
+   * @param methodName       Name of the annotated method, used for logging
+   * @return The values of the sequence, empty if the argument is missing
+   */
+  private def readStringSeqField(annotationFields: List[Tree], index: Int, methodName: String): Seq[String] =
+    annotationFields.lift(index) match {
+      case Some(Apply(_: Tree, args: List[Tree])) =>
+        args.flatMap({
+          // matches 'String's in the sequence
+          case Literal(Constant(s: String)) => Some(s)
+
+          case rest =>
+            // matches 'FHIR_DATA_TYPES' and 'FHIR_PARAMETER_TYPES' fields
+            val resolved = getFhirDataTypeValue(rest.toString())
+            if (resolved.isEmpty)
+              logger.warn(s"Dropping the value '$rest' of the FhirPathFunction annotation on '$methodName' from the " +
+                s"function documentation; it is neither a string literal nor a resolvable FHIR_DATA_TYPES/FHIR_PARAMETER_TYPES constant!")
+            resolved
+        })
+      case _ => Seq.empty
+    }
 
   /**
    * Retrieves the corresponding value of a FHIR data type from its string representation.
