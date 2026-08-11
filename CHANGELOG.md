@@ -108,6 +108,13 @@ upgrade path from 3.x is in the
   longer rejects every valid template (inverted check); missing template
   content raises `FhirExpressionException` instead of
   `NoSuchElementException`; section objects are field-order independent.
+- `AbstractFhirPathFunctionLibrary.getFunctionDocumentation()` resolves
+  `returnType`/`inputType` entries written as `FHIR_DATA_TYPES` or
+  `FHIR_PARAMETER_TYPES` references to their plain values. They previously
+  leaked the wrapping `Option` into the `Seq[String]` (for example
+  `Some(number)` for `agg:sum`), which surfaced in anything serializing the
+  documentation. A reference that cannot be resolved is now logged and
+  dropped instead of being reported as `None`.
 - `TerminologyParser` ValueSet filter-operator handling; unversioned
   ValueSet references resolve to the latest version.
 - Client defects found by the new contract suite, including shared
