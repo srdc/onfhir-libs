@@ -37,7 +37,7 @@ jobs:
           distribution: temurin
           cache: maven
       - name: Set up Coursier
-        uses: coursier/setup-action@v1
+        uses: coursier/setup-action@v3
       - name: MiMa against public 3.3 artifacts
         shell: pwsh
         run: ./scripts/check-binary-compatibility.ps1
