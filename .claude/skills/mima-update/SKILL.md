@@ -5,15 +5,24 @@ description: Accept an intentional binary break by regenerating the MiMa baselin
 
 # Update the MiMa acceptance baseline
 
-The baseline (`docs/compatibility/mima-3.3-accepted.txt`) is a reviewed
-record of intentional breaks, not a suppression file. Binary breaks land
+The live baseline is whichever file `$baseline` names in
+`scripts/check-binary-compatibility.ps1` - currently
+`docs/compatibility/mima-4.0.0-accepted.txt`. Read the script rather than
+assuming a version: the pair is retargeted at the newest release after every
+publish (RELEASING.md section 5), and older `mima-<version>-*` files are kept
+only as the historical record of what that release changed. Never regenerate
+those.
+
+The baseline is a reviewed record of intentional breaks, not a
+suppression file. Binary breaks land
 ONLY in a major release (see RELEASING.md, "Versioning policy"): during a
 minor/patch cycle the only acceptable baseline additions are
 `NEW-ARTIFACT` entries for new modules, and any reported break is a
 regression to fix in code. A baseline update is valid ONLY when the same
 change also updates:
 
-1. `docs/compatibility/mima-3.3-reconciliation.md` - the issue-family row
+1. the reconciliation document named in the script's report header, currently
+   `docs/compatibility/mima-4.0.0-reconciliation.md` - the issue-family row
    explaining the break and pointing at the migration guide section;
 2. the migration guide under `docs/migration/` - the consumer-facing
    old-vs-new row (and `CHANGELOG.md` if the change is user-visible).
@@ -34,7 +43,9 @@ change also updates:
 3. Write the reconciliation row and the migration-guide entry for each
    intended break. If a new artifact appears, it must also be registered
    in the script's `$artifacts`/`$newArtifacts` tables (see the
-   `new-module` skill).
+   `new-module` skill). Add to `$newArtifacts` ONLY a coordinate with no
+   counterpart in `$PreviousVersion`: an artifact listed there is skipped
+   rather than compared, so a stale entry silently stops checking it.
 4. Regenerate the baseline:
 
    ```

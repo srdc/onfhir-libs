@@ -1,0 +1,46 @@
+# MiMa accepted compatibility report
+# Baseline: io.onfhir reusable artifacts 4.0.0
+# Every reported break must have a corresponding migration-guide entry.
+# Reconciliation: docs/compatibility/mima-4.0.0-reconciliation.md
+
+## onfhir-common_2.13
+COMPATIBLE
+
+## onfhir-client_2.13
+COMPATIBLE
+
+## onfhir-path_2.13
+COMPATIBLE
+
+## onfhir-query_2.13
+COMPATIBLE
+
+## onfhir-config_2.13
+COMPATIBLE
+
+## onfhir-expression_2.13
+COMPATIBLE
+
+## onfhir-validation_2.13
+COMPATIBLE
+
+## onfhir-template-engine_2.13
+COMPATIBLE
+
+## onfhir-definitions-r4
+COMPATIBLE
+
+## onfhir-definitions-r5
+COMPATIBLE
+
+## onfhir-definitions-stu3
+COMPATIBLE
+
+## onfhir-r4_2.13
+COMPATIBLE
+
+## onfhir-r5_2.13
+COMPATIBLE
+
+## onfhir-stu3_2.13
+COMPATIBLE

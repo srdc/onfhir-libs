@@ -1,5 +1,12 @@
 # MiMa 3.3 Compatibility Reconciliation
 
+> **Historical record.** This pair (`mima-3.3-accepted.txt` and this document)
+> is the permanent record of what 4.0.0 changed relative to 3.3. It is no
+> longer regenerated: after the 4.0.0 release the gate was retargeted at the
+> published 4.0.0 API, so the live pair is
+> [`mima-4.0.0-reconciliation.md`](mima-4.0.0-reconciliation.md) with
+> `mima-4.0.0-accepted.txt`.
+
 The accepted machine baseline (`mima-3.3-accepted.txt`) compares the current
 reusable JARs with the public `3.3` artifacts. Version `4.0.0` is
 intentionally a major release. This table groups every reported issue family

@@ -1,16 +1,19 @@
-# Compares current reusable artifacts with the last public 3.3 release using
-# MiMa CLI. The committed baseline represents intentional breaks reconciled
-# with the migration guide. ASCII-only for Windows PowerShell 5.1.
+# Compares current reusable artifacts with the last public 4.0.0 release using
+# MiMa CLI. Retargeted after every release (RELEASING.md section 5) so the
+# working tree is always measured against the newest published API instead of
+# an ageing one. Within the 4.x line the accepted baseline should therefore
+# contain only COMPATIBLE entries; a break belongs in a major release,
+# reconciled with a migration guide. ASCII-only for Windows PowerShell 5.1.
 
 param(
-    [string]$PreviousVersion = "3.3",
+    [string]$PreviousVersion = "4.0.0",
     [switch]$UpdateBaseline,
     [switch]$SkipBuild
 )
 
 $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$baseline = Join-Path $repoRoot "docs\compatibility\mima-3.3-accepted.txt"
+$baseline = Join-Path $repoRoot "docs\compatibility\mima-4.0.0-accepted.txt"
 $scratch = Join-Path ([IO.Path]::GetTempPath()) ("onfhir-mima-" + [Guid]::NewGuid().ToString("N"))
 $oldDir = Join-Path $scratch "old"
 New-Item -ItemType Directory -Path $oldDir -Force | Out-Null
@@ -34,9 +37,14 @@ $artifacts = [ordered]@{
     "onfhir-r5" = "onfhir-r5_2.13"
     "onfhir-stu3" = "onfhir-stu3_2.13"
 }
-$newArtifacts = @("onfhir-query_2.13", "onfhir-template-engine_2.13",
-    "onfhir-definitions-r4", "onfhir-definitions-r5", "onfhir-definitions-stu3",
-    "onfhir-r5_2.13", "onfhir-stu3_2.13")
+# Empty against the 4.0.0 baseline: every published coordinate exists in it, so
+# every one gets compared. An artifact listed here is SKIPPED rather than
+# checked, so only add one that genuinely has no counterpart in
+# $PreviousVersion - a stale entry silently stops checking that artifact for
+# binary breaks. The seven entries this list held against 3.3 (query,
+# template-engine, the three definitions artifacts, r5, stu3) all shipped in
+# 4.0.0.
+$newArtifacts = @()
 
 $modules = ($artifacts.Keys -join ",")
 Push-Location $repoRoot
@@ -50,7 +58,7 @@ try {
         "# MiMa accepted compatibility report",
         "# Baseline: io.onfhir reusable artifacts $PreviousVersion",
         "# Every reported break must have a corresponding migration-guide entry.",
-        "# Reconciliation: docs/compatibility/mima-3.3-reconciliation.md",
+        "# Reconciliation: docs/compatibility/mima-4.0.0-reconciliation.md",
         ""
     )
     foreach ($entry in $artifacts.GetEnumerator()) {

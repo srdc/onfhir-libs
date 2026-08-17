@@ -137,10 +137,19 @@ chain before anything is published:
 - Retarget binary compatibility at the new release. Do this after EVERY
   release: it is what makes the versioning policy enforceable, because the
   next development cycle is then compared against the newest published API
-  and any break shows up immediately instead of at the next major. Update
-  the `$PreviousVersion` default and the baseline path in
-  `scripts/check-binary-compatibility.ps1`, regenerate with
-  `-UpdateBaseline`, and (for a major) start a new reconciliation document
-  under `docs/compatibility/`; the 3.3 one stays as the 4.0.0 record.
+  and any break shows up immediately instead of at the next major. In
+  `scripts/check-binary-compatibility.ps1`: update the `$PreviousVersion`
+  default, the baseline path, and the reconciliation path in the report
+  header, then EMPTY `$newArtifacts` - every coordinate in the release now
+  has a counterpart in the new baseline, and an artifact left in that list
+  is skipped rather than compared, so a stale entry silently stops checking
+  it. Regenerate with `-UpdateBaseline` and confirm the result is all
+  `COMPATIBLE`: the tree being compared is the one just published, so
+  anything else means the retarget is wrong. For a major, start a new
+  reconciliation document under `docs/compatibility/` and keep the previous
+  baseline and reconciliation as the permanent record of that release,
+  never regenerating them. The 4.0.0 retarget followed exactly this shape:
+  `mima-3.3-*` stayed as the 4.0.0 record, `mima-4.0.0-*` became the live
+  pair.
 - Bump `revision` in the root `pom.xml` to the next development version.
 - Announce as appropriate (release notes, downstream consumers).
