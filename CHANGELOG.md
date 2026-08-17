@@ -9,7 +9,7 @@ changes occur only in a major release - where they additionally get a row in
 the [migration guide](docs/migration/3.x-to-4.0.0.md) and a reconciled MiMa
 baseline under `docs/compatibility/`.
 
-## 4.0.0 (unreleased)
+## 4.0.0 - 2026-08-17
 
 First independent release of the reusable library family from
 `srdc/onfhir-libs`, split out of the onFHIR monorepo and relicensed to
