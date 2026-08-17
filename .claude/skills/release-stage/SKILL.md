@@ -23,11 +23,18 @@ below is in scope.
 ## 2. Stage signed artifacts
 
 ```
-mvn -B -Prelease deploy -DaltDeploymentRepository=staging::file:///<absolute-staging-path>
+mvn -B clean -Prelease deploy -DaltDeploymentRepository=staging::file:///<absolute-staging-path>
 ```
 
 - The target is a LOCAL file-based repository (e.g. under `C:\tmp`); this
   is not a publish.
+- NEVER drop `clean`, however long the rebuild takes. Maven leaves
+  resources in `target/classes` after they are deleted from `src`, so an
+  incremental staging build packages files that no longer exist in the
+  commit - it shipped `onfhir-client`'s deleted `application.conf` into a
+  4.0.0 release candidate. Orphaned `.class` files behave the same way, and
+  `check-staged-release.ps1` verifies presence and signatures, not that the
+  content matches the tree.
 - The two-part `id::url` form is valid only because the root POM pins
   `maven-deploy-plugin` to 3.x (`deploy.plugin.version`); Maven 3.8.6 would
   otherwise bind 2.7, which requires `id::layout::url`. Do NOT "fix" a

@@ -57,8 +57,21 @@ roll forward as a new version, never in place.
 2. Deploy the full reactor to a file-based staging repository:
 
    ```shell
-   mvn -B -Prelease deploy -DaltDeploymentRepository=staging::file:///<absolute-staging-path>
+   mvn -B clean -Prelease deploy -DaltDeploymentRepository=staging::file:///<absolute-staging-path>
    ```
+
+   `clean` is MANDATORY, never an optimisation to skip. Maven copies
+   resources into `target/classes` but never removes ones that disappeared
+   from `src`, so an incremental staging build silently packages deleted
+   files. This actually happened while staging 4.0.0: `onfhir-client`
+   dropped its `application.conf` in `15e85d8`, and a staging run without
+   `clean` still shipped the August 3 copy left behind in
+   `target/classes` - the exact file whose removal was the point of the fix,
+   and one that would have changed config resolution for every consumer.
+   The same applies to orphaned `.class` files from deleted or renamed
+   sources. `check-staged-release.ps1` cannot catch any of this: it checks
+   presence, metadata and signatures, not whether the content matches the
+   commit being released.
 
    The two-part `id::url` form and the all-or-nothing upload both come from
    the `maven-deploy-plugin` pin in the root POM (`deploy.plugin.version`,
