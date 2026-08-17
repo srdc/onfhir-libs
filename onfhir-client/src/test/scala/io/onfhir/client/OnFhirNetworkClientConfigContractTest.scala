@@ -2,6 +2,7 @@ package io.onfhir.client
 
 import com.typesafe.config.ConfigFactory
 import io.onfhir.api.client.FhirClientException
+import io.onfhir.client.intrcp.BearerTokenInterceptorFromTokenEndpoint
 import io.onfhir.client.testutil.{MockFhirServer, WithMockFhirServer}
 import org.junit.runner.RunWith
 import org.specs2.mutable.Specification
@@ -68,6 +69,42 @@ class OnFhirNetworkClientConfigContractTest extends Specification with WithMockF
 
       mockServer.tokenRequestCount mustEqual 1
       mockServer.lastRequest.header("Authorization") must beSome(s"Bearer ${MockFhirServer.accessToken}")
+    }
+  }
+
+  "BearerTokenInterceptorFromTokenEndpoint.getFromConfig" should {
+    "read an already-scoped authz subtree, as the other config entry points do" in {
+      mockServer.reset()
+      val authzConfig = config(
+        s"""
+           |client_id = client-1
+           |client_secret = secret-1
+           |token_endpoint = "${mockServer.tokenEndpointUrl}"
+           |token_endpoint_auth_method = client_secret_basic
+           |""".stripMargin)
+      val interceptor = BearerTokenInterceptorFromTokenEndpoint
+        .getFromConfig(authzConfig, requiredScopes = Seq("system/Patient.read"))
+      val client = OnFhirNetworkClient(mockServer.baseUrl, interceptor)
+
+      Await.result(client.read("Patient", "p1").execute(), 5.seconds)
+
+      mockServer.lastRequest.header("Authorization") must beSome(s"Bearer ${MockFhirServer.accessToken}")
+    }
+
+    "reject a root config, so a 3.x caller fails loudly instead of silently" in {
+      val rootConfig = config(
+        s"""
+           |onfhir.client.authz {
+           |  client_id = client-1
+           |  client_secret = secret-1
+           |  token_endpoint = "${mockServer.tokenEndpointUrl}"
+           |  token_endpoint_auth_method = client_secret_basic
+           |}
+           |""".stripMargin)
+
+      BearerTokenInterceptorFromTokenEndpoint
+        .getFromConfig(rootConfig, requiredScopes = Seq("system/Patient.read")) must
+        throwA[com.typesafe.config.ConfigException.Missing]
     }
   }
 

@@ -590,9 +590,17 @@ and construct only the interceptor from it:
 val config: Config = ConfigFactory.load()
 val authInterceptor =
   BearerTokenInterceptorFromTokenEndpoint
-    .getFromConfig(config, requiredScopes = Seq("patient/*.rs"))
+    .getFromConfig(config.getConfig("onfhir.client.authz"), requiredScopes = Seq("patient/*.rs"))
 val fhirClient = OnFhirNetworkClient("http://127.0.0.1:8080/fhir", authInterceptor)
 ```
+
+Every configuration entry point in this module takes an already-scoped subtree
+and reads relative keys: `OnFhirNetworkClient(config)` expects `onfhir.client`,
+and the interceptor factories expect its `authz` block. Scope the config
+yourself, as above; no key path is hardcoded in the library. `getFromConfig`
+takes the requested scopes as an argument, while
+`BearerTokenInterceptorFromTokenEndpoint(authzConfig)` reads them from the
+subtree's `scopes` key.
 
 ## Handling responses
 

@@ -124,8 +124,12 @@ class BearerTokenInterceptorFromTokenEndpoint(
 }
 
 object BearerTokenInterceptorFromTokenEndpoint {
-  def getFromConfig(config: Config, requiredScopes: Seq[String]): BearerTokenInterceptorFromTokenEndpoint = {
-    val authzConfig = config.getConfig("onfhir.client.authz")
+  /**
+   * Builds the interceptor from an already-scoped `authz` subtree, taking the
+   * requested scopes from code rather than from a `scopes` key. Pass
+   * `config.getConfig("onfhir.client.authz")` when reading a root configuration.
+   */
+  def getFromConfig(authzConfig: Config, requiredScopes: Seq[String]): BearerTokenInterceptorFromTokenEndpoint =
     new BearerTokenInterceptorFromTokenEndpoint(
       authzConfig.getString("client_id"),
       authzConfig.getString("client_secret"),
@@ -133,7 +137,6 @@ object BearerTokenInterceptorFromTokenEndpoint {
       authzConfig.getString("token_endpoint"),
       authzConfig.getString("token_endpoint_auth_method")
     )
-  }
 
   def apply(
     clientId: String,
@@ -149,12 +152,16 @@ object BearerTokenInterceptorFromTokenEndpoint {
       clientAuthenticationMethod
     )
 
-  def apply(config: Config): BearerTokenInterceptorFromTokenEndpoint =
+  /**
+   * Builds the interceptor from an already-scoped `authz` subtree, taking the
+   * requested scopes from its `scopes` key.
+   */
+  def apply(authzConfig: Config): BearerTokenInterceptorFromTokenEndpoint =
     new BearerTokenInterceptorFromTokenEndpoint(
-      config.getString("client_id"),
-      config.getString("client_secret"),
-      config.getStringList("scopes").asScala.toSeq,
-      config.getString("token_endpoint"),
-      config.getString("token_endpoint_auth_method")
+      authzConfig.getString("client_id"),
+      authzConfig.getString("client_secret"),
+      authzConfig.getStringList("scopes").asScala.toSeq,
+      authzConfig.getString("token_endpoint"),
+      authzConfig.getString("token_endpoint_auth_method")
     )
 }

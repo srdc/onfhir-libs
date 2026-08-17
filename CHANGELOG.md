@@ -62,6 +62,13 @@ upgrade path from 3.x is in the
   and `FhirClientException`/`BundleRequestParsingException` error model;
   `executeAndReturnOperationOutcome` fails the returned `Future` on error
   responses.
+- Every `onfhir-client` configuration entry point takes an already-scoped
+  subtree and reads relative keys, so the library hardcodes no key path.
+  `BearerTokenInterceptorFromTokenEndpoint.getFromConfig` no longer reads the
+  absolute path `onfhir.client.authz` off a root config; pass
+  `config.getConfig("onfhir.client.authz")` instead. The signature is
+  unchanged, and a root config now fails at construction with a
+  `ConfigException.Missing`.
 - Library classes take explicit configuration parameters
   (`FhirSearchHandling`, `FhirEndpointSettings`, `FhirResultDefaults`,
   `FhirCapabilityDefaults`, ...) instead of reading the server's global
@@ -92,6 +99,14 @@ upgrade path from 3.x is in the
   grammar generation that no source referenced, which also transitively
   removes `org.antlr:antlr-runtime:3.3` from every consumer's dependency
   graph. Only `antlr4-runtime`, which the generated parser uses, remains.
+- The packaged `application.conf` from `onfhir-client`. A library must not
+  ship one: `ConfigFactory.load()` merges every `application.conf` on the
+  classpath in classloader order, so the jar's values could silently override
+  a consumer's own. Its only live keys restated `ClientHttpSettings`'
+  hardcoded defaults, which `fromConfig` already falls back to on an empty
+  config, and the rest was commented-out sample text kept in the module
+  README. No `reference.conf` replaces it, consistent with the rest of the
+  family reserving no key paths.
 - Server runtime concerns (routing directives, persistence, auditing,
   authorization runtime, events/Kafka, HTTP response exceptions,
   `OnfhirConfig`): continued in the Repofyr server under `io.repofyr`
