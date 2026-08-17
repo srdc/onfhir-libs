@@ -1,12 +1,12 @@
 # Known limitations
 
-Deliberate, documented gaps in the 4.0.0 libraries. Each entry is tracked as
-a GitHub issue once the repository is public (see `RELEASING.md`,
-post-publish steps); source comments reference this file.
+Deliberate, documented gaps in the 4.0.0 libraries. Each entry is tracked as a
+GitHub issue, linked below; source comments reference this file.
 
 ## onfhir-validation
 
 1. Intensional ValueSet definitions without supplied CodeSystem content
+   ([#11](https://github.com/srdc/onfhir-libs/issues/11))
    - `TerminologyParser.parseValueSet` omits a ValueSet that yields no
      locally resolvable codes (e.g. "all of SNOMED CT"). Such bindings must
      be validated through an external terminology service; locally they are
@@ -14,18 +14,21 @@ post-publish steps); source comments reference this file.
    - See the module README "Limitations" section.
 
 2. XHTML narrative content is not validated
+   ([#12](https://github.com/srdc/onfhir-libs/issues/12))
    - `FhirContentValidator.validatePrimitive` accepts any `xhtml` value, and
      `AbstractStructureDefinitionParser.parseConstraint` skips the
      `htmlChecks()` invariant because it is not a FHIRPath expression.
      Implementing an html-check function would close both gaps together.
 
 3. Lenient lexical validation for `uri`, `url`, and `base64Binary`
+   ([#13](https://github.com/srdc/onfhir-libs/issues/13))
    - `uri` and `url` are only required to be non-empty strings because
      FHIR's own definitions do not conform to strict URI syntax;
      `base64Binary` content is accepted without decoding. Revisit whether a
      configurable strict mode is worth offering.
 
 4. Slicing discriminator path normalization is heuristic
+   ([#14](https://github.com/srdc/onfhir-libs/issues/14))
    - `FhirContentValidator` strips slice-name segments (e.g.
      `component:alpha.code`) from discriminator paths before FHIRPath
      evaluation and special-cases `extension(...)`; other function-style
@@ -34,6 +37,7 @@ post-publish steps); source comments reference this file.
 ## onfhir-path
 
 5. An undefined FHIRPath environment variable resolves to empty, not an error
+   ([#15](https://github.com/srdc/onfhir-libs/issues/15))
    - The FHIRPath spec treats an undefined `%name` as an error, so a typo in
      an expression is silently empty rather than reported. Raising an error
      instead would turn expressions that currently evaluate quietly into
@@ -47,6 +51,7 @@ post-publish steps); source comments reference this file.
 ## onfhir-client
 
 6. Unresolved identifiers are not cached by `IdentityServiceClient`
+   ([#16](https://github.com/srdc/onfhir-libs/issues/16))
    - `findMatching` only calls `cache.storeIdentity` for a resolved id, so
      every unresolved identifier re-queries the FHIR server on each call.
      Deliberate: caching misses would need an `IFhirIdentityCache` API
