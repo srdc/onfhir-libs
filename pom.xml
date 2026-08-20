@@ -108,7 +108,7 @@
              json4s only needs a compatible Jackson 2.x, so this is
              independent of the json4s pin above. -->
         <jackson.version>2.15.2</jackson.version>
-        <scala.xml.version>2.2.0</scala.xml.version>
+        <scala.xml.version>2.4.0</scala.xml.version>
         <slf4j.version>2.0.18</slf4j.version>
         <config.version>1.4.3</config.version>
         <specs2.version>4.20.4</specs2.version>
