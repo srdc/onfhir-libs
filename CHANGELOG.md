@@ -9,6 +9,22 @@ changes occur only in a major release - where they additionally get a row in
 the [migration guide](docs/migration/3.x-to-4.0.0.md) and a reconciled MiMa
 baseline under `docs/compatibility/`.
 
+## 4.0.1 (unreleased)
+
+### Removed
+
+- `onfhir-common_2.13` no longer declares `org.json4s:json4s-xml_2.13` or
+  `org.scala-lang.modules:scala-xml_2.13`, so neither reaches consumers
+  transitively any more. No module has imported either since the JSON/XML
+  formatter (`io.onfhir.util.XmlFormatter`) was deleted in 2020: these
+  libraries carry FHIR resources as json4s `JObject`, name the XML media
+  types only for content negotiation, and `onfhir-client` rejects
+  `application/fhir+xml` outright. The two leave together because the
+  explicit `scala-xml` declaration existed to manage `json4s-xml`'s own
+  `scala-xml` 1.3.0 up to the 2.x line; dropping only `scala-xml` would have
+  brought 1.3.0 back. A consumer that relied on either arriving through
+  `onfhir-common` must declare it directly.
+
 ## 4.0.0 - 2026-08-17
 
 First independent release of the reusable library family from

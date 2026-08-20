@@ -108,7 +108,6 @@
              json4s only needs a compatible Jackson 2.x, so this is
              independent of the json4s pin above. -->
         <jackson.version>2.15.2</jackson.version>
-        <scala.xml.version>2.2.0</scala.xml.version>
         <slf4j.version>2.0.18</slf4j.version>
         <config.version>1.4.9</config.version>
         <specs2.version>4.20.4</specs2.version>
@@ -390,11 +389,6 @@
                 <artifactId>json4s-jackson_${scala.binary.version}</artifactId>
                 <version>${json4s.version}</version>
             </dependency>
-            <dependency>
-                <groupId>org.json4s</groupId>
-                <artifactId>json4s-xml_${scala.binary.version}</artifactId>
-                <version>${json4s.version}</version>
-            </dependency>
             <!-- Imported so every Jackson artifact json4s pulls in resolves at
                  one coherent version. See the jackson.version property. -->
             <dependency>
@@ -403,11 +397,6 @@
                 <version>${jackson.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.scala-lang.modules</groupId>
-                <artifactId>scala-xml_${scala.binary.version}</artifactId>
-                <version>${scala.xml.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
