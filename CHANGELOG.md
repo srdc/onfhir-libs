@@ -11,6 +11,14 @@ baseline under `docs/compatibility/`.
 
 ## 4.0.1 (unreleased)
 
+### Changed
+
+- `com.typesafe:config` managed up from 1.4.3 to 1.4.9 and
+  `commons-io:commons-io` from 2.18.0 to 2.22.0. Both are compatible-line
+  upgrades with no signature impact; consumers resolve the new versions
+  transitively through `onfhir-common_2.13` (and `onfhir-client_2.13` for
+  `config`).
+
 ### Removed
 
 - `onfhir-common_2.13` no longer declares `org.json4s:json4s-xml_2.13` or
