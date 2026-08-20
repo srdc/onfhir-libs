@@ -38,7 +38,7 @@ jobs:
           cache: maven
       - name: Set up Coursier
         uses: coursier/setup-action@v3
-      - name: MiMa against public 3.3 artifacts
+      - name: MiMa against the last published release
         shell: pwsh
         run: ./scripts/check-binary-compatibility.ps1
 
