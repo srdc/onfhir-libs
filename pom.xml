@@ -138,7 +138,7 @@
         <deploy.plugin.version>3.1.2</deploy.plugin.version>
         <enforcer.plugin.version>3.6.3</enforcer.plugin.version>
         <flatten.plugin.version>1.6.0</flatten.plugin.version>
-        <central.publishing.plugin.version>0.8.0</central.publishing.plugin.version>
+        <central.publishing.plugin.version>0.11.0</central.publishing.plugin.version>
     </properties>
 
     <build>
