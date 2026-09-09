@@ -493,7 +493,7 @@ class FhirPathEvaluatorTest extends Specification {
       FhirPathEvaluator().evaluateString("Observation.valueQuantity.value.toString()", observation).head mustEqual "6.3" //from string
       FhirPathEvaluator().evaluateString("Observation.component.exists().toString()", observation2).head mustEqual "true" //from boolean
       FhirPathEvaluator().evaluateString("Observation.component.empty().toString()", observation2).head mustEqual "false" //from boolean
-      FhirPathEvaluator().evaluateString("(1 'U').toString()", observation2).head mustEqual "1.0 'U'" //from boolean
+      FhirPathEvaluator().evaluateString("(1 'U').toString()", observation2).head mustEqual "1 'U'" //from quantity, rendered at the precision it was written with
       FhirPathEvaluator().evaluateString("Observation.effectivePeriod.start.toString()", observation).head mustEqual "2013-04-02T09:30:10+01:00" //from boolean
     }
 
@@ -1006,8 +1006,11 @@ class FhirPathEvaluatorTest extends Specification {
       evaluator.evaluateNumerical("2.386.lowBoundary(7)", JNull).headOption.map(_.toString()) must beSome("2.3855000")
       evaluator.evaluateNumerical("2.386.lowBoundary(8)", JNull).headOption.map(_.toString()) must beSome("2.38550000")
       evaluator.evaluateNumerical("2.1.lowBoundary(4)", JNull).headOption.map(_.toString()) must beSome("2.0500")
+      // A literal written without a decimal point carries zero decimal places, so its boundary
+      // is half a unit away. It used to be half a tenth, because the literal reached BigDecimal
+      // through a Double and Double.toString always appends ".0".
       val two = evaluator.evaluateNumerical("2.lowBoundary()", JNull).headOption
-      two must beSome(BigDecimal(1.95))
+      two must beSome(BigDecimal(1.5))
       evaluator.evaluateNumerical("0.0.lowBoundary()", JNull).headOption must beSome(BigDecimal(-0.05))
 
       // lowBoundary on dates and times

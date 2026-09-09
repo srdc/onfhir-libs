@@ -147,7 +147,9 @@ object FhirPathLiteralEvaluator extends FhirPathExprBaseVisitor[Seq[FhirPathResu
     * @return
     */
   private def parseNumberLiteral(n:String):FhirPathNumber = {
-    FhirPathNumber(n.toDouble)
+    //The NUMBER token is a plain decimal, so parse it exactly; going through Double would
+    //collapse distinct integral literals above 2^53
+    FhirPathNumber(BigDecimal(n))
   }
 
   /**
@@ -163,7 +165,7 @@ object FhirPathLiteralEvaluator extends FhirPathExprBaseVisitor[Seq[FhirPathResu
         val value = m.group(1)
         var unit = Option(m.group(5))
         if(unit.isEmpty) unit = dtUnits.get(m.group(6)).map(_.drop(1).dropRight(1))
-        Some(FhirPathQuantity(FhirPathNumber(value.toDouble), unit.getOrElse("1")))
+        Some(FhirPathQuantity(FhirPathNumber(BigDecimal(value)), unit.getOrElse("1")))
       })
   }
 

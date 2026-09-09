@@ -11,8 +11,29 @@ baseline under `docs/compatibility/`.
 
 ## 4.0.1 (unreleased)
 
+### Fixed
+
+- `onfhir-path_2.13` no longer narrows integral values through an IEEE-754
+  `Double` on their way into `FhirPathNumber`. `FhirPathValueTransformer`
+  converted `JLong` and `JDecimal` with `.toDouble`, and the literal parser
+  read the grammar's `NUMBER` token with `String.toDouble`, so above 2^53 - the
+  `Double` mantissa limit - adjacent values became one. Distinct `integer64`
+  keys rendered as the same string, compared equal to each other, and reached
+  the output JSON as a neighbouring value, all without an evaluation error.
+  Where such an expression fed a resource id, many source records collapsed
+  onto one id. `FhirPathNumber` is `BigDecimal` backed, so the whole
+  `integer64` range is now exact.
+
 ### Changed
 
+- A number carrying no fractional digits now reports zero decimal places
+  instead of one. Reading it through a `Double` used to give it a spurious
+  scale, because `Double.toString` always appends `.0`: the quantity literal
+  `1 'U'` rendered as `1.0 'U'`, and `2.lowBoundary()` answered `1.95` rather
+  than `1.5`. Values written with a decimal point are unaffected - `0.0` and
+  `2.386` keep the precision they were written with. Precision-sensitive
+  callers of `~`, `toString()`, `lowBoundary()` and `highBoundary()` on
+  integral values should re-check their expectations.
 - `com.typesafe:config` managed up from 1.4.3 to 1.4.9 and
   `commons-io:commons-io` from 2.18.0 to 2.22.0. Both are compatible-line
   upgrades with no signature impact; consumers resolve the new versions

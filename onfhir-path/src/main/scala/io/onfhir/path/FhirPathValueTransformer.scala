@@ -19,8 +19,10 @@ object FhirPathValueTransformer {
       case jobj: JObject => Seq(FhirPathComplex(jobj))
       case JInt(i) => Seq(FhirPathNumber(BigDecimal(i)))
       case JDouble(num) => Seq(FhirPathNumber(num))
-      case JDecimal(num) => Seq(FhirPathNumber(num.toDouble))
-      case JLong(num) => Seq(FhirPathNumber(num.toDouble))
+      //Keep JDecimal and JLong exact: FhirPathNumber is BigDecimal backed, and narrowing them
+      //through Double silently collapses distinct integral values above 2^53
+      case JDecimal(num) => Seq(FhirPathNumber(num))
+      case JLong(num) => Seq(FhirPathNumber(BigDecimal(num)))
       case JString(s) if isContentFhir && s.headOption.exists(_.isDigit) => Seq(resolveFromString(s))
       case JString(s) => Seq(FhirPathString(s))
       case JBool(b) => Seq(FhirPathBoolean(b))
