@@ -13,6 +13,22 @@ library version line is independent of Repofyr server versions.
 All published coordinates, the BOM included, release together at one
 version.
 
+That is deliberate, and the build is shaped for it: every inter-module
+dependency resolves through `${onfhir.libs.version}`, and the BOM pins every
+entry to `${project.version}`. Versioning modules independently would mean
+managed versions for our own coordinates, a MiMa baseline per module, and a
+hand-maintained version per BOM entry - and it would deliver little, because
+the modules stack. `onfhir-path` sits under `onfhir-validation`, which sits
+under `onfhir-config`, which sits under the three FHIR implementations, so a
+consumer naming only `onfhir-r5` resolves the rest transitively. Publishing a
+fix in `onfhir-path` alone would leave that consumer on the previous
+`onfhir-path`, never seeing a fix the release notes claim to have shipped;
+delivering it means new versions of everything above, which is most of the
+reactor anyway. Republishing an unchanged module costs nothing - an
+`onfhir-common` identical to its predecessor still says which train it
+belongs to. Which module actually changed belongs in `CHANGELOG.md`, where
+each entry names its coordinate; the version identifies the set.
+
 - **Patch** (`4.0.x`): fixes only, no API change.
 - **Minor** (`4.x.0`): additive, backward binary-compatible API (new
   functions, classes, or modules).
