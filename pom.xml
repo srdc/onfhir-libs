@@ -98,7 +98,7 @@
              is a json4s JObject), and Spark consumers such as spark-on-fhir
              would hit a classpath conflict on any other line. Do not bump
              without a matching Spark version change. -->
-        <json4s.version>3.7.0-M11</json4s.version>
+        <json4s.version>4.1.0-M8</json4s.version>
         <!-- json4s 3.7.0-M11 resolves jackson-databind 2.12.2 transitively,
              which is affected by CVE-2020-36518 (deeply nested JSON exhausts
              the stack) - reachable here because these libraries parse
