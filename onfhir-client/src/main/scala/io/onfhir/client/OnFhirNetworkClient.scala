@@ -36,6 +36,15 @@ final class OnFhirNetworkClient private (
 
   override def getBaseUrl(): String = cleanServerBaseUrl
 
+  /**
+   * Creates an unauthenticated client for another server using this client's transport,
+   * HTTP settings and execution context. No interceptors (including credentials and
+   * OAuth token state) are inherited. Configure authentication on the returned client.
+   * Keep the owner alive for the intended sharing lifetime; this does not close a transport.
+   */
+  def forServer(serverBaseUrl: String): OnFhirNetworkClient =
+    new OnFhirNetworkClient(serverBaseUrl, Nil, httpSettings, transport)
+
   def withBasicAuthentication(username: String, password: String): OnFhirNetworkClient =
     withInterceptor(new BasicAuthenticationInterceptor(username, password))
 

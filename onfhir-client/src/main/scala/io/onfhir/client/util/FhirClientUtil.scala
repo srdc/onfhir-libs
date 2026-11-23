@@ -25,6 +25,13 @@ object FhirClientUtil {
     // Create a basic client with the provided FHIR repository URL.
     val client = OnFhirNetworkClient.apply(fhirRepoUrl)
 
+    configureSecurity(client, securitySettings)
+  }
+
+  /** Applies authentication to a supplied client; the caller owns its transport configuration. */
+  def configureSecurity(client: OnFhirNetworkClient,
+                        securitySettings: Option[IFhirRepositorySecuritySettings]): OnFhirNetworkClient = {
+
     // Apply optional security settings for authentication, based on the type provided.
     securitySettings
       .map {

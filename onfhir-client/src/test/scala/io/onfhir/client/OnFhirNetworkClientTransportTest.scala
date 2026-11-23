@@ -100,6 +100,29 @@ class OnFhirNetworkClientTransportTest extends Specification with BeforeAfterAll
   }
 
   "OnFhirNetworkClient transport" should {
+    "share one selector across endpoint clients without inheriting authentication" in {
+      import scala.jdk.CollectionConverters._
+      def selectors = Thread.getAllStackTraces.keySet.asScala
+        .filter(t => t.isAlive && t.getName.matches("^HttpClient-\\d+-SelectorManager$"))
+        .map(_.getName).toSet
+      val before = selectors
+      val owner = OnFhirNetworkClient(baseUrl).withBasicAuthentication("alice", "secret")
+      val clients = Await.result(Future.sequence((1 to 65).map { i =>
+        Future(owner.forServer(s"$baseUrl/tenant-$i"))
+      }), 10.seconds)
+      (selectors -- before).size must beLessThanOrEqualTo(1)
+      val anonymous = clients.head
+      val bob = clients.last.withBasicAuthentication("bob", "secret")
+      Await.result(owner.read("Patient", "p1").execute(), 5.seconds)
+      lastAuthorization.get mustEqual "Basic YWxpY2U6c2VjcmV0"
+      Await.result(bob.read("Patient", "p1").execute(), 5.seconds)
+      lastAuthorization.get mustEqual "Basic Ym9iOnNlY3JldA=="
+      lastPath.get mustEqual "/fhir/tenant-65/Patient/p1"
+      Await.result(anonymous.read("Patient", "p1").execute(), 5.seconds)
+      Option(lastAuthorization.get) must beNone
+      lastPath.get mustEqual "/fhir/tenant-1/Patient/p1"
+    }
+
     "round-trip JSON bodies and FHIR response headers" in {
       val response = Await.result(OnFhirNetworkClient(baseUrl).read("Patient", "p1").execute(), 5.seconds)
 
