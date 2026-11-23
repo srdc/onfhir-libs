@@ -9,6 +9,17 @@ changes occur only in a major release - where they additionally get a row in
 the [migration guide](docs/migration/3.x-to-4.0.0.md) and a reconciled MiMa
 baseline under `docs/compatibility/`.
 
+## Unreleased
+
+### Added
+
+- `OnFhirNetworkClient.forServer` creates an unauthenticated client sharing the
+  owner's transport, HTTP settings and execution context without inheriting
+  interceptors or credentials. `FhirClientUtil.configureSecurity` applies security
+  settings to a supplied client. These APIs let bounded client caches reuse the
+  transport even when endpoint entries are evicted. Existing constructors retain
+  their behavior. This additive API requires a minor release before publication.
+
 ## 4.0.1 (unreleased)
 
 ### Fixed
